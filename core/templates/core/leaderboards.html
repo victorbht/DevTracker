@@ -1,0 +1,310 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+    
+    .rank-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .rank-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .rank-position {
+        font-size: 24px;
+        font-weight: bold;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 15px;
+    }
+    
+    .rank-position.gold {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: white;
+    }
+    
+    .rank-position.silver {
+        background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+        color: white;
+    }
+    
+    .rank-position.bronze {
+        background: linear-gradient(135deg, #CD7F32, #B87333);
+        color: white;
+    }
+    
+    .rank-position.normal {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .rank-username {
+        flex: 1;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    
+    .rank-stats {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+    }
+    
+    .stat-badge {
+        background: #3498db;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    
+    .my-position {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: 3px solid #ffd700;
+    }
+    
+    .tab-navigation {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 10px;
+    }
+    
+    .tab-btn {
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+        background: #3498db;
+        color: white;
+    }
+    
+    .rare-achievement {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        margin-bottom: 15px;
+    }
+    
+    .rarity-legendary { border-left: 5px solid #FFD700; }
+    .rarity-epic { border-left: 5px solid #9b59b6; }
+    .rarity-rare { border-left: 5px solid #3498db; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">🏆 Rankings & Leaderboards</h1>
+            <p class="text-muted">Compete com outros desenvolvedores e alcance o topo!</p>
+        </div>
+    </div>
+
+    <!-- Minha Posição -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="leaderboard-card">
+                <h3>📍 Sua Posição</h3>
+                <div class="rank-item my-position">
+                    <div class="rank-position normal">#{{ my_positions.global|default:"N/A" }}</div>
+                    <div class="rank-username">{{ user.username }} (você)</div>
+                    <div class="rank-stats">
+                        <span class="stat-badge">Global</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="leaderboard-card">
+                <h3>🔥 Streak Position</h3>
+                <div class="rank-item my-position">
+                    <div class="rank-position normal">#{{ my_positions.streak|default:"N/A" }}</div>
+                    <div class="rank-username">{{ user.username }} (você)</div>
+                    <div class="rank-stats">
+                        <span class="stat-badge">Streak</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-navigation">
+        <button class="tab-btn active" onclick="showTab('global')">🌍 Ranking Global</button>
+        <button class="tab-btn" onclick="showTab('streak')">🔥 Ranking Streak</button>
+        <button class="tab-btn" onclick="showTab('nearby')">👥 Competidores Próximos</button>
+        <button class="tab-btn" onclick="showTab('rare')">💎 Conquistas Raras</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-global" class="tab-content">
+        <div class="leaderboard-card">
+            <h3>🌍 Top 10 Global (por XP)</h3>
+            {% for entry in global_top_10 %}
+            <div class="rank-item {% if entry.username == user.username %}my-position{% endif %}">
+                <div class="rank-position {% if entry.posicao == 1 %}gold{% elif entry.posicao == 2 %}silver{% elif entry.posicao == 3 %}bronze{% else %}normal{% endif %}">
+                    #{{ entry.posicao }}
+                </div>
+                <div class="rank-username">
+                    {{ entry.username }}
+                    {% if entry.username == user.username %}<span class="badge bg-warning">VOCÊ</span>{% endif %}
+                </div>
+                <div class="rank-stats">
+                    <span><strong>{{ entry.xp }}</strong> XP</span>
+                    <span>Nível <strong>{{ entry.nivel }}</strong></span>
+                    <span>🏆 <strong>{{ entry.badge_count }}</strong> badges</span>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Nenhum ranking disponível ainda.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="tab-streak" class="tab-content" style="display:none;">
+        <div class="leaderboard-card">
+            <h3>🔥 Top 10 Streaks</h3>
+            {% for entry in streak_top_10 %}
+            <div class="rank-item {% if entry.username == user.username %}my-position{% endif %}">
+                <div class="rank-position {% if entry.posicao == 1 %}gold{% elif entry.posicao == 2 %}silver{% elif entry.posicao == 3 %}bronze{% else %}normal{% endif %}">
+                    #{{ entry.posicao }}
+                </div>
+                <div class="rank-username">
+                    {{ entry.username }}
+                    {% if entry.username == user.username %}<span class="badge bg-warning">VOCÊ</span>{% endif %}
+                </div>
+                <div class="rank-stats">
+                    <span>🔥 <strong>{{ entry.streak_atual }}</strong> dias</span>
+                    <span>🏅 Recorde: <strong>{{ entry.streak_record }}</strong> dias</span>
+                    <span>Nível <strong>{{ entry.nivel }}</strong></span>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Nenhum streak ativo.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="tab-nearby" class="tab-content" style="display:none;">
+        <div class="leaderboard-card">
+            <h3>👥 Competidores Próximos</h3>
+            <p class="text-muted mb-3">Usuários perto da sua posição no ranking</p>
+            {% for entry in nearby_competitors %}
+            <div class="rank-item {% if entry.username == user.username %}my-position{% endif %}">
+                <div class="rank-position normal">#{{ entry.posicao }}</div>
+                <div class="rank-username">
+                    {{ entry.username }}
+                    {% if entry.username == user.username %}<span class="badge bg-warning">VOCÊ</span>{% endif %}
+                </div>
+                <div class="rank-stats">
+                    <span><strong>{{ entry.xp }}</strong> XP</span>
+                    <span>Nível <strong>{{ entry.nivel }}</strong></span>
+                    <a href="{% url 'core:compare_achievements' entry.username %}" class="btn btn-sm btn-outline-primary">Comparar</a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Sem competidores próximos no momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="tab-rare" class="tab-content" style="display:none;">
+        <div class="leaderboard-card">
+            <h3>💎 Suas Conquistas Mais Raras</h3>
+            <p class="text-muted mb-3">Conquistas que poucos usuários possuem</p>
+            {% for item in rarest_achievements %}
+            <div class="rare-achievement rarity-{{ item.nivel_raridade|lower }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5><i class="{{ item.conquista.icone_fa }}"></i> {{ item.conquista.nome }}</h5>
+                        <p class="mb-1">{{ item.conquista.descricao }}</p>
+                        <small>{{ item.nivel_raridade }} - Apenas {{ item.raridade_pct }}% dos usuários têm esta conquista</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge bg-light text-dark">
+                            {{ item.usuarios }} usuário{{ item.usuarios|pluralize }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Você ainda não possui conquistas raras.</p>
+            {% endfor %}
+            
+            <div class="text-center mt-4">
+                <a href="{% url 'core:rarest_achievements' %}" class="btn btn-primary">Ver Todas as Conquistas Raras</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Competição Semanal -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="leaderboard-card">
+                <h3>⚔️ Competição Semanal</h3>
+                <p class="text-muted">Quem está estudando mais esta semana?</p>
+                <div class="alert alert-info">
+                    <strong>Período:</strong> {{ weekly_competition.inicio|date:"d/m/Y" }} - {{ weekly_competition.fim|date:"d/m/Y" }}<br>
+                    <strong>Participantes:</strong> {{ weekly_competition.participantes|length }}
+                </div>
+                <small class="text-muted">🔄 Reseta toda segunda-feira às 00:00</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Esconde todos os tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Remove active de todos os botões
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Mostra tab selecionado
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    
+    // Ativa botão
+    event.target.classList.add('active');
+}
+
+// Auto-refresh a cada 2 minutos
+setInterval(() => {
+    location.reload();
+}, 120000);
+</script>
+{% endblock %}

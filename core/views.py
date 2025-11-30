@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Prefetch
 from django.utils import timezone
 from datetime import timedelta, date
 from django.core.paginator import Paginator
 from django.http import HttpResponse
+from django.core.cache import cache
 import json
 import math
 from .models import (
     SessaoEstudo, Tecnologia, MetodoEstudo, Conquista, PerfilUsuario,
-    UserProfile, StudySession, SkillNode, JobQuest, BossBattle, ProjectSubmission
+    UserProfile, StudySession, SkillNode, JobQuest, BossBattle, ProjectSubmission,
+    Badge, UserBadge, StoreItem, UserInventory, CodeReview, Notification
 )
 from .forms import SessaoEstudoForm
 from .badges import seed_badges
@@ -104,13 +106,17 @@ def index(request, periodo='tudo'):
         # Apenas calcula o streak para exibição
         _, streak_atual = verificar_conquistas(request.user)
 
-    # Filtros de Data
+    # Filtros de Data com otimização
     data_limite = None
     hoje = timezone.now().date()
     if periodo == 'semana': data_limite = hoje - timedelta(days=7)
     elif periodo == 'mes': data_limite = hoje - timedelta(days=30)
     
-    sessoes = SessaoEstudo.objects.select_related('tecnologia','metodo').all()
+    # Query otimizada com select_related e only para reduzir campos
+    sessoes = SessaoEstudo.objects.select_related('tecnologia','metodo').only(
+        'id', 'tecnologia__nome', 'metodo__nome', 'topico', 'tempo_liquido', 
+        'data_registro', 'qtd_exercicios', 'qtd_acertos'
+    )
     if data_limite: sessoes = sessoes.filter(data_registro__date__gte=data_limite)
 
     # Métricas Gerais
@@ -296,10 +302,20 @@ def index(request, periodo='tudo'):
 # === GALERIA DE CONQUISTAS ===
 @login_required
 def galeria_conquistas(request):
-    perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+    from django.core.cache import cache
     
-    # 1. Busca todas as conquistas e ordena
-    todas = Conquista.objects.filter(Q(oculta=False) | Q(pk__in=perfil.conquistas.values('pk'))).order_by('categoria', 'quantidade_necessaria')
+    perfil = PerfilUsuario.objects.select_related('user').prefetch_related(
+        Prefetch('conquistas', queryset=Conquista.objects.only('id', 'nome', 'categoria', 'icone_fa', 'cor_hex'))
+    ).get_or_create(user=request.user)[0]
+    
+    # Cache de conquistas disponíveis por 5 minutos
+    cache_key = f'conquistas_visiveis_{request.user.id}'
+    todas = cache.get(cache_key)
+    if todas is None:
+        todas = Conquista.objects.select_related('tecnologia_alvo', 'metodo_alvo').filter(
+            Q(oculta=False) | Q(pk__in=perfil.conquistas.values('pk'))
+        ).order_by('categoria', 'quantidade_necessaria')
+        cache.set(cache_key, todas, 300)  # 5 minutos
     
     # 2. IDs das conquistas que o usuário já tem
     meus_ids = set(perfil.conquistas.values_list('id', flat=True))
@@ -517,11 +533,21 @@ def popular_badges(request):
 def dashboard_gamer(request):
     try:
         from .models import UserBadge
+        from django.db.models import Prefetch
         
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        recent_sessions = StudySession.objects.filter(user=request.user).order_by('-start_time')[:5]
+        # Query otimizada com prefetch_related
+        profile = UserProfile.objects.select_related('user', 'equipped_frame', 'equipped_banner').prefetch_related(
+            Prefetch('badges', queryset=Badge.objects.only('id', 'name', 'icon_class')),
+            Prefetch('skills_desbloqueadas', queryset=SkillNode.objects.only('id', 'name', 'icon_class'))
+        ).get_or_create(user=request.user)[0]
         
-        recent_badges = UserBadge.objects.filter(user_profile=profile).order_by('-earned_at')[:3]
+        recent_sessions = StudySession.objects.select_related('skill').filter(
+            user=request.user
+        ).only('id', 'skill__name', 'start_time', 'duration_minutes', 'xp_earned').order_by('-start_time')[:5]
+        
+        recent_badges = UserBadge.objects.select_related('badge').filter(
+            user_profile=profile
+        ).only('badge__name', 'badge__icon_class', 'earned_at').order_by('-earned_at')[:3]
         total_badges = profile.badges.count()
         
         today = timezone.now().date()
@@ -693,10 +719,32 @@ def create_session(request):
 
 @login_required
 def skill_tree(request):
-    profile = UserProfile.objects.get_or_create(user=request.user)[0]
-    all_skills = SkillNode.objects.filter(parent=None).prefetch_related('children')
-    unlocked = profile.skills_desbloqueadas.all()
-    return render(request, 'core/skill_tree.html', {'skills': all_skills, 'unlocked': unlocked, 'profile': profile})
+    try:
+        profile = UserProfile.objects.get_or_create(user=request.user)[0]
+        skills = SkillNode.objects.all()
+        
+        if not skills.exists():
+            return render(request, 'core/roadmap.html', {
+                'mermaid_chart': 'graph TD\nA["Execute: python manage.py populate_tree"]',
+                'profile': profile,
+                'empty': True
+            })
+        
+        unlocked_ids = set(profile.skills_desbloqueadas.values_list('id', flat=True))
+        
+        chart_data = []
+        for skill in skills:
+            status = 'unlocked' if skill.id in unlocked_ids else 'locked'
+            node_id = f'node_{skill.id}'
+            chart_data.append(f'{node_id}("{skill.name}"):::{status}')
+            if skill.parent:
+                parent_id = f'node_{skill.parent.id}'
+                chart_data.append(f'{parent_id} --> {node_id}')
+        
+        mermaid_chart = 'graph TD\n' + '\n'.join(chart_data)
+        return render(request, 'core/roadmap.html', {'mermaid_chart': mermaid_chart, 'profile': profile})
+    except Exception as e:
+        return HttpResponse(f'<h1>Erro Skill Tree</h1><pre>{str(e)}</pre><p>Rode: python manage.py populate_tree</p>')
 
 @login_required
 def conquistas_rpg(request):
@@ -723,6 +771,69 @@ def trophy_room(request):
     victories = ProjectSubmission.objects.filter(user=request.user).values_list('boss_id', flat=True)
     all_bosses = BossBattle.objects.all().order_by('min_skill_level')
     return render(request, 'core/trophies.html', {'all_bosses': all_bosses, 'victories': victories})
+
+@login_required
+def war_room(request):
+    from .models import CodeReview
+    sos_signals = ProjectSubmission.objects.filter(sos_requested=True).select_related('user', 'boss').prefetch_related('reviews').order_by('-created_at')
+    return render(request, 'core/war_room.html', {'sos_signals': sos_signals})
+
+@login_required
+def war_room_detail(request, submission_id):
+    from .models import CodeReview, Notification
+    submission = get_object_or_404(ProjectSubmission, pk=submission_id)
+    reviews = submission.reviews.select_related('author').order_by('-created_at')
+    
+    if request.method == 'POST':
+        CodeReview.objects.create(
+            submission=submission,
+            author=request.user,
+            role=request.POST.get('role'),
+            content=request.POST.get('content')
+        )
+        profile = UserProfile.objects.get_or_create(user=request.user)[0]
+        profile.adicionar_xp(10)
+        profile.dev_coins += 5
+        profile.save()
+        
+        if submission.user != request.user:
+            Notification.objects.create(
+                user=submission.user,
+                title='Reforços Chegaram! 🛡️',
+                message=f'{request.user.username} enviou ajuda na sua missão.',
+                type='INFO',
+                link=f'/gamer/war-room/{submission_id}/'
+            )
+        
+        return redirect(f'/gamer/war-room/{submission_id}/?success=Reforço enviado! +10 XP')
+    
+    return render(request, 'core/war_room_detail.html', {'submission': submission, 'reviews': reviews})
+
+@login_required
+def accept_solution(request, review_id):
+    from .models import CodeReview, Notification
+    review = get_object_or_404(CodeReview, pk=review_id)
+    
+    if request.user != review.submission.user:
+        return redirect(f'/gamer/war-room/{review.submission.id}/?error=Apenas o comandante pode aceitar')
+    
+    review.is_accepted = True
+    review.save()
+    
+    hero = UserProfile.objects.get_or_create(user=review.author)[0]
+    hero.adicionar_xp(300)
+    hero.dev_coins += 50
+    hero.save()
+    
+    Notification.objects.create(
+        user=review.author,
+        title='Solução Aceita! 🏆',
+        message=f'Sua ajuda foi aceita! +300 XP e +50 Coins',
+        type='SUCCESS',
+        link=f'/gamer/war-room/{review.submission.id}/'
+    )
+    
+    return redirect(f'/gamer/war-room/{review.submission.id}/?success=Solução aceita! Herói recompensado')
 
 @login_required
 def user_profile(request):

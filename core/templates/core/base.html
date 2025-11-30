@@ -174,6 +174,9 @@
             <a class="nav-link" href="{% url 'core:quest_board' %}">
                 <i class="fas fa-scroll"></i> Quests & Bosses
             </a>
+            <a class="nav-link" href="{% url 'core:war_room' %}">
+                <i class="fas fa-satellite-dish text-danger"></i> Sala de Guerra
+            </a>
             <a class="nav-link" href="{% url 'core:trophy_room' %}">
                 <i class="fas fa-trophy"></i> Sala de Troféus
             </a>
@@ -190,10 +193,18 @@
                 <i class="fas fa-gem"></i> Loja & Inventário
             </a>
             <a class="nav-link" href="{% url 'core:skill_tree' %}">
-                <i class="fas fa-sitemap"></i> Skill Tree
+                <i class="fas fa-project-diagram text-info"></i> Skill Tree
             </a>
             <a class="nav-link" href="{% url 'core:user_profile' %}">
                 <i class="fas fa-user-circle"></i> Meu Perfil
+            </a>
+            <a class="nav-link position-relative" href="#" data-bs-toggle="modal" data-bs-target="#notifModal">
+                <i class="fas fa-bell {% if notif_count > 0 %}text-warning{% endif %}"></i> Notificações
+                {% if notif_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; margin-left: -10px;">
+                    {{ notif_count }}
+                </span>
+                {% endif %}
             </a>
             <hr class="border-secondary mx-3">
             <a class="nav-link text-danger" href="#">
@@ -229,6 +240,32 @@
             </div>
             <div class="toast-body bg-dark text-white border-top border-secondary">
                 <span id="toastMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="notifModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--hud-bg); border: 1px solid #333;">
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold text-white"><i class="fas fa-bell text-warning me-2"></i>Centro de Comando</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for notif in latest_notifs %}
+                        <a href="{{ notif.link }}" class="list-group-item list-group-item-action bg-transparent text-white border-secondary px-4 py-3">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1 fw-bold {% if not notif.is_read %}text-info{% endif %}">{{ notif.title }}</h6>
+                                <small class="text-muted">{{ notif.created_at|timesince }}</small>
+                            </div>
+                            <p class="mb-0 small opacity-75">{{ notif.message }}</p>
+                        </a>
+                        {% empty %}
+                        <div class="p-4 text-center text-muted">Nenhuma novidade, comandante.</div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

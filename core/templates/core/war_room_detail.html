@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <a href="/gamer/war-room/" class="text-muted-2 mb-3 d-inline-block"><i class="fas fa-arrow-left"></i> Voltar ao Radar</a>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card card-slim border-0 shadow-soft mb-4">
+                <div class="card-header bg-danger bg-opacity-10 border-bottom border-danger py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-white mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Pedido de Socorro</h5>
+                        <span class="badge bg-danger">SOS Ativo</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; border:2px solid #666; border-radius:8px; font-size:2rem;">
+                            <i class="{{ submission.boss.boss_icon }}"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-white mb-0">{{ submission.boss.title }}</h4>
+                            <span class="text-muted-2">Comandante: <strong class="text-white">{{ submission.user.username }}</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-dark border border-secondary d-flex justify-content-between align-items-center">
+                        <div class="text-truncate me-3">
+                            <i class="fab fa-github text-white me-2"></i>
+                            <a href="{{ submission.repo_link }}" target="_blank" class="text-info text-decoration-underline">{{ submission.repo_link }}</a>
+                        </div>
+                        <a href="{{ submission.repo_link }}" target="_blank" class="btn btn-sm btn-light fw-bold">Ver Código</a>
+                    </div>
+
+                    <p class="text-white small mt-3">
+                        <i class="fas fa-info-circle text-info me-1"></i>
+                        <strong>Objetivo:</strong> {{ submission.boss.description|truncatewords:30 }}
+                    </p>
+                </div>
+            </div>
+
+            <h5 class="text-white fw-bold mb-3"><i class="fas fa-comments me-2"></i>Reforços Enviados ({{ reviews.count }})</h5>
+            
+            {% for review in reviews %}
+            <div class="card card-slim border-0 shadow-soft mb-3 {% if review.is_accepted %}border-start border-4 border-success{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ review.author.username }}" class="rounded-circle" width="30">
+                            <span class="fw-bold text-white">{{ review.author.username }}</span>
+                            
+                            {% if review.role == 'BUG' %}
+                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger">🐛 Clérigo</span>
+                            {% elif review.role == 'OPTIMIZE' %}
+                            <span class="badge bg-info bg-opacity-25 text-info border border-info">⚡ Ferreiro</span>
+                            {% else %}
+                            <span class="badge bg-warning bg-opacity-25 text-warning border border-warning">🎨 Bardo</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted-2">{{ review.created_at|timesince }}</small>
+                    </div>
+                    
+                    <div class="bg-dark p-3 rounded border border-secondary text-white small" style="white-space: pre-wrap;">{{ review.content }}</div>
+
+                    {% if review.is_accepted %}
+                    <div class="mt-2 text-success fw-bold small"><i class="fas fa-check-circle me-1"></i> Solução Aceita! (+300 XP)</div>
+                    {% elif request.user == submission.user %}
+                    <div class="mt-2 text-end">
+                        <a href="/gamer/war-room/accept/{{ review.id }}/" class="btn btn-sm btn-outline-success rounded-pill">
+                            <i class="fas fa-check me-1"></i> Aceitar Solução
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-4">Nenhum reforço chegou ainda. Seja o primeiro!</div>
+            {% endfor %}
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card card-slim border-0 shadow-soft sticky-top" style="top: 20px;">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-paper-plane me-2 text-info"></i>Enviar Reforço
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted-2 small">Escolha sua Classe</label>
+                            <div class="d-grid gap-2">
+                                <input type="radio" class="btn-check" name="role" id="role1" value="BUG" checked>
+                                <label class="btn btn-outline-danger text-start" for="role1">
+                                    <i class="fas fa-bug me-2"></i><strong>Clérigo do Debug</strong>
+                                    <br><small class="opacity-75" style="font-size:0.75rem">Encontrei o erro.</small>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="role" id="role2" value="OPTIMIZE">
+                                <label class="btn btn-outline-info text-start" for="role2">
+                                    <i class="fas fa-bolt me-2"></i><strong>Ferreiro de Algoritmos</strong>
+                                    <br><small class="opacity-75" style="font-size:0.75rem">Pode ser mais rápido.</small>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="role" id="role3" value="STYLE">
+                                <label class="btn btn-outline-warning text-start" for="role3">
+                                    <i class="fas fa-magic me-2"></i><strong>Bardo das Boas Práticas</strong>
+                                    <br><small class="opacity-75" style="font-size:0.75rem">Sugestão de estilo.</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted-2 small">Sua Solução</label>
+                            <textarea name="content" class="form-control bg-dark border-secondary text-white" rows="6" placeholder="Cole o trecho corrigido ou explique..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-info w-100 fw-bold">
+                            Enviar Ajuda (+10 XP)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-slim { background-color: rgba(26, 26, 36, 0.8); }
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .text-muted-2 { color: #8899a6; }
+</style>
+{% endblock %}

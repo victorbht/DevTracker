@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-0"><i class="fas fa-satellite-dish text-danger me-2"></i>Sala de Guerra</h2>
+            <p class="text-muted-2">Sinais de SOS detectados. Envie reforços para ganhar XP.</p>
+        </div>
+        <div class="badge bg-danger bg-opacity-25 border border-danger text-danger px-3 py-2">
+            <i class="fas fa-wifi me-2"></i> {{ sos_signals.count }} Sinais Ativos
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for sub in sos_signals %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-slim border-0 shadow-soft h-100 border-start border-4 border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ sub.user.username }}" class="rounded-circle border border-secondary" width="30">
+                            <span class="text-white small fw-bold">{{ sub.user.username }}</span>
+                        </div>
+                        <small class="text-muted-2">{{ sub.created_at|timesince }} atrás</small>
+                    </div>
+                    
+                    <h5 class="text-white fw-bold mb-1">{{ sub.boss.title }}</h5>
+                    <p class="text-muted-2 small mb-3">{{ sub.boss.description|truncatewords:10 }}</p>
+                    
+                    <div class="d-flex gap-2 mb-3">
+                        {% if sub.boss.recommended_skill %}
+                        <span class="badge bg-dark border border-secondary text-muted">
+                            <i class="{{ sub.boss.recommended_skill.icon_class }} me-1"></i> {{ sub.boss.recommended_skill.name }}
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-dark border border-secondary text-muted">
+                            <i class="fas fa-comments me-1"></i> {{ sub.reviews.count }} Reforços
+                        </span>
+                    </div>
+
+                    <a href="/gamer/war-room/{{ sub.id }}/" class="btn btn-outline-danger w-100 rounded-pill">
+                        <i class="fas fa-paper-plane me-2"></i> Enviar Ajuda
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-check-circle fa-4x text-success mb-3 opacity-50"></i>
+            <h4 class="text-white">Setor Limpo!</h4>
+            <p class="text-muted-2">Nenhum pedido de socorro ativo no momento.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .card-slim { background-color: rgba(26, 26, 36, 0.8); }
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .text-muted-2 { color: #8899a6; }
+</style>
+{% endblock %}

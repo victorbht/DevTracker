@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ 
+        startOnLoad: true, 
+        theme: 'base',
+        themeVariables: {
+            primaryColor: '#1a1a24',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#22e3a1',
+            lineColor: '#4db5ff',
+            secondaryColor: '#006100',
+            tertiaryColor: '#fff'
+        }
+    });
+</script>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-0"><i class="fas fa-project-diagram text-info me-2"></i>Árvore de Habilidades</h2>
+            <p class="text-muted-2">Mapa do seu conhecimento. Desbloqueie nós estudando.</p>
+        </div>
+        <div>
+            <span class="badge bg-dark border border-success text-success me-2"><i class="fas fa-circle"></i> Desbloqueado</span>
+            <span class="badge bg-dark border border-secondary text-muted"><i class="fas fa-lock"></i> Bloqueado</span>
+        </div>
+    </div>
+
+    <div class="roadmap-container p-4">
+        <div class="mermaid">
+{{ mermaid_chart|safe }}
+
+classDef unlocked fill:#1f3a33,stroke:#22e3a1,stroke-width:2px,color:#fff;
+classDef locked fill:#1a1a24,stroke:#555,stroke-width:1px,stroke-dasharray: 5 5,color:#888;
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-slim { background-color: rgba(26, 26, 36, 0.8); }
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .text-muted-2 { color: #8899a6; }
+    
+    .roadmap-container {
+        background-color: rgba(26, 26, 36, 0.95);
+        border: 1px solid #333;
+        border-radius: 12px;
+        overflow-x: auto;
+        min-height: 600px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        background-image: radial-gradient(#2c3e50 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    .node.unlocked rect, .node.unlocked polygon, .node.unlocked circle {
+        fill: rgba(34, 227, 161, 0.2) !important;
+        stroke: #22e3a1 !important;
+        stroke-width: 2px !important;
+        filter: drop-shadow(0 0 5px #22e3a1);
+    }
+    
+    .node.locked rect, .node.locked polygon, .node.locked circle {
+        fill: #222 !important;
+        stroke: #555 !important;
+        stroke-dasharray: 5 5;
+    }
+
+    .node text {
+        font-family: 'Segoe UI', sans-serif !important;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}

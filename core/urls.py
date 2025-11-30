@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_advanced
 
 app_name = 'core'
 
@@ -14,6 +14,30 @@ urlpatterns = [
     # Rota de Estatísticas
     path('estatisticas/', views.estatisticas, name='estatisticas'),
     
+    # === NOVAS FUNCIONALIDADES AVANÇADAS ===
+    # Rankings e Leaderboards
+    path('rankings/', views_advanced.leaderboards_view, name='rankings'),
+    path('rankings/compare/<str:username>/', views_advanced.compare_achievements, name='compare_achievements'),
+    path('rankings/rarest/', views_advanced.rarest_achievements, name='rarest_achievements'),
+    
+    # Analytics Avançado
+    path('analytics/', views_advanced.analytics_dashboard, name='analytics'),
+    path('analytics/weekly-report/', views_advanced.weekly_report_view, name='weekly_report'),
+    
+    # Export/Import
+    path('export/', views_advanced.export_data, name='export_data'),
+    path('import/', views_advanced.import_data, name='import_data'),
+    
+    # APIs JSON
+    path('api/stats/', views_advanced.api_user_stats, name='api_stats'),
+    path('api/productivity/', views_advanced.api_productivity_score, name='api_productivity'),
+    path('api/ranking/', views_advanced.api_global_ranking, name='api_ranking'),
+    path('api/my-position/', views_advanced.api_my_position, name='api_my_position'),
+    
+    # Cache Management
+    path('cache/warm/', views_advanced.warm_cache, name='warm_cache'),
+    path('cache/clear/', views_advanced.clear_cache, name='clear_cache'),
+    
     # PACOTE GAMER
     path('gamer/', views.dashboard_gamer, name='dashboard_gamer'),
     path('gamer/quests/', views.quest_board, name='quest_board'),
@@ -21,6 +45,7 @@ urlpatterns = [
     path('gamer/inventario/', views.inventario, name='inventario'),
     path('gamer/session/create/', views.create_session, name='create_session'),
     path('gamer/skill-tree/', views.skill_tree, name='skill_tree'),
+    path('gamer/roadmap/', views.skill_tree, name='roadmap'),
     path('gamer/conquistas/', views.conquistas_rpg, name='conquistas_rpg'),
     path('gamer/profile/', views.user_profile, name='user_profile'),
     path('gamer/trophies/', views.trophy_room, name='trophy_room'),

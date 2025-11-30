@@ -2,6 +2,8 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Tecnologia(models.Model):
     nome = models.CharField(max_length=50, unique=True)
@@ -268,3 +270,16 @@ class CodeReview(models.Model):
     role = models.CharField(max_length=20, choices=ROLES)
     content = models.TextField()
     is_accepted = models.BooleanField(default=False)
+
+class Notification(models.Model):
+    TYPES = [('SUCCESS', 'Sucesso'), ('WARNING', 'Aviso'), ('DANGER', 'Alerta'), ('INFO', 'Info')]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=100)
+    message = models.TextField()
+    type = models.CharField(max_length=20, choices=TYPES, default='INFO')
+    link = models.CharField(max_length=200, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
