@@ -8,7 +8,10 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 import json
 import math
-from .models import SessaoEstudo, Tecnologia, MetodoEstudo, Conquista, PerfilUsuario
+from .models import (
+    SessaoEstudo, Tecnologia, MetodoEstudo, Conquista, PerfilUsuario,
+    UserProfile, StudySession, SkillNode, JobQuest, BossBattle, ProjectSubmission
+)
 from .forms import SessaoEstudoForm
 from .badges import seed_badges
 
@@ -508,3 +511,104 @@ def estatisticas(request):
 def popular_badges(request):
     created = seed_badges(reset=True)
     return HttpResponse(f"<h1>Sucesso!</h1><p>{created} Badges criadas.</p><a href='/conquistas/'>Voltar para Galeria</a>")
+
+# === PACOTE GAMER VIEWS ===
+@login_required
+def dashboard_gamer(request):
+    from .models import UserBadge, UserSkill
+    from django.utils import timezone
+    
+    profile = request.user.profile
+    recent_sessions = StudySession.objects.filter(user=request.user).order_by('-start_time')[:5]
+    
+    # Badges
+    recent_badges = UserBadge.objects.filter(user_profile=profile).order_by('-earned_at')[:3]
+    total_badges = profile.badges.count()
+    locked_badges_count = 16 - total_badges
+    
+    # Check-in diário
+    today = timezone.now().date()
+    daily_quest_completed = profile.last_checkin == today
+    
+    # XP Progress
+    next_level_xp = profile.xp_to_next_level()
+    progress_percent = int((profile.current_xp / next_level_xp) * 100) if next_level_xp else 0
+    
+    # Top 3 Skills
+    top_skills = UserSkill.objects.filter(user=request.user).order_by('-level', '-xp')[:3]
+    
+    # Próximo Boss disponível
+    next_boss = BossBattle.objects.filter(is_active=True).order_by('min_skill_level').first()
+    
+    # Skills disponíveis para nova sessão
+    all_skills = SkillNode.objects.all().order_by('name')
+    
+    return render(request, 'core/dashboard_rpg.html', {
+        'profile': profile,
+        'recent_sessions': recent_sessions,
+        'recent_badges': recent_badges,
+        'total_badges': total_badges,
+        'locked_badges_count': locked_badges_count,
+        'daily_quest_completed': daily_quest_completed,
+        'next_level_xp': next_level_xp,
+        'progress_percent': progress_percent,
+        'top_skills': top_skills,
+        'next_boss': next_boss,
+        'all_skills': all_skills,
+    })
+
+@login_required
+def quest_board(request):
+    quests = JobQuest.objects.filter(is_active=True)
+    bosses = BossBattle.objects.all()
+    return render(request, 'core/quests.html', {'quests': quests, 'bosses': bosses})
+
+@login_required
+def battle_arena(request, boss_id):
+    boss = get_object_or_404(BossBattle, pk=boss_id)
+    
+    # Processar submissão
+    if request.method == 'POST':
+        repo_link = request.POST.get('repo_link')
+        sos_requested = request.POST.get('sos_requested') == 'on'
+        if repo_link:
+            ProjectSubmission.objects.create(
+                user=request.user,
+                boss=boss,
+                repo_link=repo_link,
+                sos_requested=sos_requested
+            )
+            return redirect('core:battle_arena', boss_id=boss_id)
+    
+    submissions = ProjectSubmission.objects.filter(boss=boss).order_by('-created_at')
+    my_submission = ProjectSubmission.objects.filter(boss=boss, user=request.user).first()
+    
+    return render(request, 'core/arena.html', {
+        'boss': boss,
+        'submissions': submissions,
+        'my_submission': my_submission
+    })
+
+@login_required
+def inventario(request):
+    inventory = request.user.inventory
+    return render(request, 'core/inventory.html', {'inventory': inventory})
+
+@login_required
+def create_session(request):
+    if request.method == 'POST':
+        skill_id = request.POST.get('skill')
+        method = request.POST.get('method')
+        duration = int(request.POST.get('duration', 0))
+        notes = request.POST.get('notes', '')
+        
+        if skill_id and method and duration > 0:
+            skill = get_object_or_404(SkillNode, pk=skill_id)
+            StudySession.objects.create(
+                user=request.user,
+                skill=skill,
+                method=method,
+                duration_minutes=duration,
+                notes=notes
+            )
+    return redirect('core:dashboard_gamer')

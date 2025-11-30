@@ -8,6 +8,7 @@ DevTracker é um painel Django para acompanhar horas líquidas de estudo de prog
 - Dashboard dark/gamer com Bootstrap 5 + Chart.js e cards com progresso de nível.
 - Galeria de conquistas com filtros visuais (streak, tecnologia e tempo total).
 - CRUD completo (sessões, tecnologias e métodos) via modais e microinterações.
+- **🎮 NOVO: Pacote Gamer** - Sistema RPG completo com skill tree, loja de cosméticos, boss battles e code reviews cooperativos!
 
 ## Stack
 - **Backend:** Django 5, SQLite (dev), ORM.
@@ -51,6 +52,7 @@ export DJANGO_DEBUG=True
 
 python manage.py migrate
 python manage.py seed_badges
+python manage.py seed_gamer_pack  # 🎮 Novo: Popular Pacote Gamer
 python manage.py createsuperuser
 python manage.py runserver
 ```
@@ -89,6 +91,8 @@ Veja [CHANGELOG.md](CHANGELOG.md) para lista completa de melhorias.
 - ✅ Exportação CSV/JSON
 - ✅ Validações e confirmações
 - ✅ Testes automatizados (pytest)
+- ✅ 🎮 **Pacote Gamer RPG** (skill tree, loja, boss battles, code reviews)
+- ✅ 🔥 **Dashboard RPG Completo** (CTA principal, skill preview, boss ativo, animações)
 
 ## Deploy
 
@@ -99,6 +103,19 @@ Veja [DEPLOY.md](DEPLOY.md) para guia completo de deploy em produção.
 - **XP/Nível:** XP acumulado pelas conquistas; nível sobe a cada 1000 XP.
 - **Streak (Ofensiva):** contador diário contínuo calculado a partir de sessões.
 - **Badges automáticas:** horas por tecnologia, horas totais e streaks. Popule com `python manage.py seed_badges` (ou `/setup-badges/` restrito a staff).
+
+### 🎮 Pacote Gamer (Novo!)
+Sistema RPG avançado que transforma o aprendizado em uma experiência de jogo completa:
+
+- **🌳 Skill Tree:** Árvore hierárquica de tecnologias (Python → Django, Flask)
+- **⚡ Multiplicadores de XP:** Vídeo (1.0x), Leitura (1.2x), Código (1.5x), Projeto (2.0x)
+- **💰 DevCoins:** Moeda virtual para comprar cosméticos
+- **🛒 Loja:** Molduras de avatar, banners e temas (Comum → Lendário)
+- **⚔️ Boss Battles:** Desafios PBL com recompensas épicas (até 3000 XP)
+- **🤝 Code Reviews:** Sistema de party com papéis RPG (Clérigo, Ferreiro, Bardo)
+- **💼 Quests de Emprego:** Vagas gamificadas com requisitos de level/skills
+
+**Documentação completa:** [PACOTE_GAMER.md](PACOTE_GAMER.md)
 
 ## Estrutura rápida
 ```
@@ -111,6 +128,7 @@ core/
     test_models.py         # testes de modelos
     test_gamification.py   # testes de XP/streak/conquistas
     test_views.py          # testes de views/CRUD
+    test_gamer_pack.py     # 🎮 testes do Pacote Gamer
 devtracker/settings.py     # configs usando variáveis de ambiente
 pytest.ini                 # configuração pytest
 .github/workflows/         # CI/CD com GitHub Actions
@@ -130,11 +148,16 @@ pytest.ini                 # configuração pytest
 - [x] Docker + PostgreSQL ✅
 - [ ] Deploy (Railway/Fly/Render)
 - [x] CI/CD com GitHub Actions ✅
+- [x] 🎮 Dashboard RPG completo ✅
 
 ### Prioridade Média
+- [x] 🎮 Pacote Gamer (modelos + testes) ✅
+- [x] 🎮 Views e templates do Pacote Gamer ✅
+- [ ] 🎮 Skill tree completa (página dedicada)
+- [ ] 🎮 Code review system (party)
+- [ ] 🎮 Loja funcional (compras)
 - [ ] Templates de sessão
 - [ ] Busca full-text em anotações
-- [ ] Histórico de níveis
 - [ ] Pomodoro timer integrado
 
 ### Prioridade Baixa

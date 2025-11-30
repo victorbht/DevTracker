@@ -21,27 +21,52 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-devtracker fixed-top py-3">
+    <nav class="sidebar d-none d-lg-flex">
+        <div class="sidebar-brand">
+            <svg width="42" height="42" viewBox="0 0 100 100" class="me-2" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="bG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1abc9c"/><stop offset="100%" style="stop-color:#3498db"/></linearGradient></defs>
+                <path d="M50 5 L95 27.5 L95 72.5 L50 95 L5 72.5 L5 27.5 Z" fill="url(#bG)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+                <text x="50" y="62" font-family="monospace" font-weight="bold" font-size="45" fill="white" text-anchor="middle">&gt;_</text>
+            </svg>
+            <div class="d-flex flex-column" style="line-height:1;">
+                <span class="text-white fw-bold fs-5">Dev<span style="color: var(--accent);">Tracker</span></span>
+                <span class="text-muted-2" style="font-size:0.65rem; letter-spacing:1px;">RPG SYSTEM</span>
+            </div>
+        </div>
+        <div class="flex-grow-1 py-3 overflow-auto">
+            <small class="text-muted-2 px-4 text-uppercase fw-bold" style="font-size:0.7rem;">Principal</small>
+            <a href="/" class="nav-link"><i class="fas fa-chart-pie"></i> Dashboard</a>
+            <a href="/?view=calendar#calendarSection" class="nav-link"><i class="fas fa-calendar-alt"></i> Calendário</a>
+            <a href="/estatisticas/" class="nav-link active"><i class="fas fa-chart-line"></i> Estatísticas</a>
+            <small class="text-muted-2 px-4 text-uppercase fw-bold mt-4 d-block" style="font-size:0.7rem;">RPG & Carreira</small>
+            <a href="#" class="nav-link rpg-link" data-bs-toggle="tooltip" data-bs-title="Em breve"><i class="fas fa-scroll text-warning"></i> Quests</a>
+            <a href="#" class="nav-link rpg-link" data-bs-toggle="tooltip" data-bs-title="Em breve"><i class="fas fa-dragon text-danger"></i> Boss Battles</a>
+            <a href="#" class="nav-link rpg-link" data-bs-toggle="tooltip" data-bs-title="Em breve"><i class="fas fa-gem" style="color: var(--accent-pink);"></i> Loja & Skins</a>
+            <a href="#" class="nav-link rpg-link" data-bs-toggle="tooltip" data-bs-title="Em breve"><i class="fas fa-users text-info"></i> Guilda</a>
+            <small class="text-muted-2 px-4 text-uppercase fw-bold mt-4 d-block" style="font-size:0.7rem;">Configuração</small>
+            <a href="/#catalogCollapse" class="nav-link"><i class="fas fa-cog"></i> Ajustes</a>
+        </div>
+    </nav>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-devtracker navbar-mobile fixed-top py-3 d-lg-none">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'core:index' %}">
-                <svg width="42" height="42" viewBox="0 0 100 100" class="me-2" xmlns="http://www.w3.org/2000/svg">
-                    <defs><linearGradient id="bG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1abc9c"/><stop offset="100%" style="stop-color:#3498db"/></linearGradient></defs>
-                    <path d="M50 5 L95 27.5 L95 72.5 L50 95 L5 72.5 L5 27.5 Z" fill="url(#bG)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-                    <text x="50" y="62" font-family="monospace" font-weight="bold" font-size="45" fill="white" text-anchor="middle">&gt;_</text>
-                </svg>
-                <div class="d-flex flex-column" style="line-height:1;">
-                    <span class="text-white fw-bold fs-5">Dev<span style="color:var(--accent);">Tracker</span></span>
-                    <span class="text-muted-2" style="font-size:0.65rem;letter-spacing:1px;">GAMIFIED LEARNING</span>
-                </div>
+                <span class="text-white fw-bold">Dev<span style="color: var(--accent);">Tracker</span></span>
             </a>
-            <div class="ms-auto d-flex gap-2">
-                <a class="btn action-btn btn-sm rounded-pill px-3" href="{% url 'core:index' %}"><i class="fas fa-home me-1"></i> Dashboard</a>
-                <a class="btn action-btn btn-sm rounded-pill px-3" href="{% url 'core:conquistas' %}"><i class="fas fa-trophy me-1 text-warning"></i> Conquistas</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mobMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse mt-2" id="mobMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/?view=calendar#calendarSection">Calendário</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/estatisticas/">Estatísticas</a></li>
+                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container py-5">
+    <div class="main-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-white mb-1"><i class="fas fa-chart-line me-2 text-accent"></i>Estatísticas & Métricas</h2>
@@ -125,5 +150,6 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 </body>
 </html>

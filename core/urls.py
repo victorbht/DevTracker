@@ -14,6 +14,16 @@ urlpatterns = [
     # Rota de Estatísticas
     path('estatisticas/', views.estatisticas, name='estatisticas'),
     
+    # PACOTE GAMER
+    path('gamer/', views.dashboard_gamer, name='dashboard_gamer'),
+    path('gamer/quests/', views.quest_board, name='quest_board'),
+    path('gamer/arena/<int:boss_id>/', views.battle_arena, name='battle_arena'),
+    path('gamer/inventario/', views.inventario, name='inventario'),
+    path('gamer/session/create/', views.create_session, name='create_session'),
+    
+    # Alias para dashboard
+    path('dashboard/', views.dashboard_gamer, name='dashboard'),
+    
     # 2. ROTAS DE GERENCIAMENTO (Configurações)
     path('tech/salvar/', views.salvar_tech, name='salvar_tech'),
     path('tech/excluir/<int:id>/', views.excluir_tech, name='excluir_tech'),
@@ -26,9 +36,7 @@ urlpatterns = [
     path('editar-tempo/<int:id>/', views.editar_tempo, name='editar_tempo'),
     path('excluir/<int:id>/', views.excluir_sessao, name='excluir'),
 
-    # 4. ROTAS GENÉRICAS / DASHBOARD (Prioridade Baixa - Devem ficar por último)
-    # O Django lê de cima para baixo. Se esta estivesse em cima,
-    # ele acharia que "conquistas" é um nome de período.
+    # 4. ROTAS GENÉRICAS / DASHBOARD (Prioridade Baixa)
     path('<str:periodo>/', views.index, name='index'), 
-    path('', views.index, name='index'),
+    path('', views.dashboard_gamer, name='index'),
 ]

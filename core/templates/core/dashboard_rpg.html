@@ -1,0 +1,477 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --accent: #22e3a1;
+        --accent-2: #00d4ff;
+        --card-border: #333;
+    }
+    
+    /* Estilos específicos do Dashboard RPG */
+    .card {
+        background-color: var(--hud-bg);
+        border: 1px solid var(--card-border);
+    }
+    
+    .card-slim {
+        background-color: rgba(26, 26, 36, 0.8);
+    }
+    
+    .hero-card {
+        background: linear-gradient(135deg, rgba(26, 26, 36, 0.95), rgba(15, 15, 19, 0.95));
+    }
+    
+    .shadow-soft {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    
+    .stat-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: default;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    
+    /* Animação do Fogo (Streak) */
+    @keyframes flicker {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.1); }
+    }
+    .fire-anim {
+        color: #ff6b6b;
+        animation: flicker 2s infinite ease-in-out;
+        filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.6));
+    }
+    
+    /* Badge Styles */
+    .badge-slot {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        border: 2px solid var(--card-border);
+        display: flex;
+        align-items-center;
+        justify-content: center;
+        transition: 0.3s;
+        position: relative;
+    }
+    .badge-slot.unlocked {
+        border-color: var(--accent);
+        box-shadow: 0 0 15px rgba(34, 227, 161, 0.2);
+    }
+    .badge-slot.unlocked:hover {
+        transform: scale(1.1);
+    }
+    .badge-slot i { font-size: 1.5rem; }
+    
+    /* Progress Bar Animada */
+    .xp-progress {
+        background: rgba(255,255,255,0.1);
+        height: 12px;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+    }
+    .xp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 10px var(--accent);
+        transition: width 1.5s ease-out;
+    }
+
+    /* Daily Reward Box */
+    .daily-box {
+        background: linear-gradient(135deg, rgba(241, 196, 15, 0.1), rgba(241, 196, 15, 0.02));
+        border: 1px solid rgba(241, 196, 15, 0.3);
+    }
+    
+    .text-accent { color: var(--accent); }
+    .text-muted-2 { color: #8899a6; }
+    .avatar-box {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.3);
+    }
+    
+    .method-chip {
+        background: rgba(34, 227, 161, 0.1);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+</style>
+
+<div class="container-fluid">
+
+    <!-- CTA: Nova Sessão -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <button class="btn btn-lg btn-success w-100 shadow-lg" data-bs-toggle="modal" data-bs-target="#modalNovaSession" style="background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; font-weight: bold; letter-spacing: 1px;">
+                <i class="fas fa-plus-circle me-2"></i>INICIAR NOVA SESSÃO DE ESTUDO
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Card -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card hero-card shadow-soft h-100 position-relative overflow-hidden">
+                <div style="position:absolute; top:-50px; right:-50px; width:250px; height:250px; background:rgba(255,255,255,0.03); border-radius:50%; pointer-events:none;"></div>
+                
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="position-relative me-4">
+                        <div class="avatar-box shadow-lg">
+                            <i class="fas fa-user-ninja fa-3x text-white"></i>
+                        </div>
+                        <div class="position-absolute bottom-0 start-50 translate-middle-x badge bg-dark border border-warning text-warning shadow" style="font-size: 0.8rem; margin-bottom: -10px;">
+                            Nv. {{ profile.level }}
+                        </div>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-end mb-1">
+                            <div>
+                                <h2 class="fw-bold text-white mb-0">{{ user.username }}</h2>
+                                <span class="badge bg-secondary bg-opacity-25 border border-secondary text-light">Fullstack Developer</span>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted-2 text-uppercase fw-bold" style="font-size: 0.7rem;">Próximo Nível</small>
+                                <div class="fw-bold text-accent">{{ profile.current_xp }} / {{ next_level_xp }} XP</div>
+                            </div>
+                        </div>
+
+                        <div class="xp-progress mb-2">
+                            <div class="xp-fill" style="width: {{ progress_percent }}%;"></div>
+                        </div>
+                        
+                        <div class="d-flex gap-3 small text-muted-2">
+                            <span><i class="fas fa-history text-accent me-1"></i> Total: {{ profile.total_xp }} XP</span>
+                            <span><i class="fas fa-star text-warning me-1"></i> Rank: Top 15%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="row g-3 h-100">
+                <div class="col-6">
+                    <div class="card card-slim border-0 shadow-soft h-100 stat-card text-center py-3">
+                        <div class="card-body">
+                            <div class="mb-2"><i class="fas fa-fire fa-2x fire-anim"></i></div>
+                            <h3 class="fw-bold text-white mb-0">{{ profile.current_streak }}</h3>
+                            <small class="text-muted-2 text-uppercase font-monospace" style="font-size: 0.75rem;">Dias Streak</small>
+                            {% if profile.streak_freezes > 0 %}
+                            <div class="mt-2 badge bg-info bg-opacity-25 text-info border border-info" title="Congelador Ativo: Você está protegido por {{ profile.streak_freezes }} dia(s)">
+                                <i class="fas fa-snowflake me-1"></i> Ativo
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card card-slim border-0 shadow-soft h-100 stat-card text-center py-3 position-relative overflow-hidden">
+                        <div class="card-body">
+                            <div class="mb-2"><i class="fas fa-coins fa-2x text-warning"></i></div>
+                            <h3 class="fw-bold text-warning mb-0">{{ profile.dev_coins }}</h3>
+                            <small class="text-muted-2 text-uppercase font-monospace" style="font-size: 0.75rem;">DevCoins</small>
+                            <a href="{% url 'core:inventario' %}" class="stretched-link" title="Ir para Loja"></a>
+                        </div>
+                        <div class="position-absolute top-0 end-0 p-2">
+                            <i class="fas fa-plus-circle text-muted opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="card daily-box border-0 shadow-sm">
+                        <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-warning text-dark me-2 p-2"><i class="fas fa-calendar-check"></i></div>
+                                <div class="lh-1">
+                                    <div class="fw-bold text-white small">Check-in Diário</div>
+                                    <small class="text-muted-2" style="font-size: 0.7rem;">
+                                        {% if daily_quest_completed %}
+                                            <span class="text-success">Completado! (+10 Coins)</span>
+                                        {% else %}
+                                            Estude 15min para ganhar
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            {% if not daily_quest_completed %}
+                                <button class="btn btn-sm btn-outline-warning rounded-pill" style="font-size: 0.7rem;">GO</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skill Tree Preview + Boss Ativo -->
+    <div class="row mb-4 g-4">
+        <div class="col-lg-6">
+            <div class="card card-slim border-0 shadow-soft h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-white"><i class="fas fa-code-branch text-info me-2"></i>Skill Tree (Top 3)</h6>
+                    <a href="#" class="small text-muted text-decoration-none">Ver todas</a>
+                </div>
+                <div class="card-body">
+                    {% if top_skills %}
+                        {% for skill in top_skills %}
+                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-25">
+                            <div class="me-3">
+                                <div class="badge-slot unlocked" style="width: 50px; height: 50px;">
+                                    <i class="{{ skill.skill.icon_class }} text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-white">{{ skill.skill.name }}</span>
+                                    <span class="badge bg-info bg-opacity-25 text-info">Nv. {{ skill.level }}</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                    <div class="progress-bar bg-info" style="width: {% widthratio skill.xp 100 100 %}%;"></div>
+                                </div>
+                                <small class="text-muted-2">{{ skill.xp }}/100 XP</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-seedling fa-3x mb-3 opacity-25"></i>
+                            <p>Comece a estudar para desenvolver suas skills!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card card-slim border-0 shadow-soft h-100 position-relative overflow-hidden">
+                {% if next_boss %}
+                    <div style="position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), transparent); pointer-events: none;"></div>
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="mb-0 fw-bold text-white"><i class="fas fa-dragon text-danger me-2"></i>Boss Ativo</h6>
+                    </div>
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="me-3">
+                                <div class="badge-slot" style="width: 60px; height: 60px; border-color: #dc3545; background: rgba(220, 53, 69, 0.1);">
+                                    <i class="fas fa-skull-crossbones fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="text-white fw-bold mb-1">{{ next_boss.title }}</h5>
+                                <p class="text-muted-2 small mb-2">{{ next_boss.description|truncatewords:15 }}</p>
+                                <div class="d-flex gap-2 mb-2">
+                                    <span class="badge bg-danger bg-opacity-25 text-danger"><i class="fas fa-star me-1"></i>+{{ next_boss.xp_reward }} XP</span>
+                                    <span class="badge bg-warning bg-opacity-25 text-warning"><i class="fas fa-coins me-1"></i>+{{ next_boss.coin_reward }} Coins</span>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{% url 'core:battle_arena' next_boss.id %}" class="btn btn-danger w-100 btn-sm">
+                            <i class="fas fa-swords me-2"></i>ACEITAR DESAFIO
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3 opacity-25"></i>
+                            <p>Nenhum boss ativo no momento</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Badges e Sessões -->
+    <div class="row mb-4 g-4">
+        
+        <div class="col-lg-8">
+            <div class="card card-slim border-0 shadow-soft h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-white"><i class="fas fa-scroll text-secondary me-2"></i>Log de Missões (Últimas Sessões)</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th class="ps-4 text-muted-2 small text-uppercase">Data</th>
+                                <th class="text-muted-2 small text-uppercase">Quest (Matéria)</th>
+                                <th class="text-muted-2 small text-uppercase">Método</th>
+                                <th class="text-muted-2 small text-uppercase">Loot (XP/Coins)</th>
+                                <th class="text-end pe-4 text-muted-2 small text-uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in recent_sessions %}
+                            <tr>
+                                <td class="ps-4 text-white fw-bold">{{ session.start_time|date:"d/m H:i" }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="{{ session.skill.icon_class }} me-2 text-accent"></i>
+                                        <span>{{ session.skill.name }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="method-chip">{{ session.get_method_display }}</span></td>
+                                <td>
+                                    <span class="text-accent fw-bold">+{{ session.xp_earned }} XP</span>
+                                    <span class="text-warning small ms-1">(+{{ session.coins_earned }} G)</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <span class="badge bg-success bg-opacity-25 text-success">Completado</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Nenhuma missão registrada recentemente. 
+                                    <a href="#" class="text-accent">Comece agora!</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card card-slim border-0 shadow-soft h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-white"><i class="fas fa-trophy text-warning me-2"></i>Conquistas Recentes</h6>
+                    <a href="#" class="small text-muted text-decoration-none">Ver todas</a>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        
+                        {% for user_badge in recent_badges %}
+                        <div class="text-center">
+                            <div class="badge-slot unlocked mb-1" data-bs-toggle="tooltip" title="{{ user_badge.badge.description }}">
+                                <i class="{{ user_badge.badge.icon_class }} text-white"></i>
+                            </div>
+                            <small class="d-block text-muted-2" style="font-size: 0.7rem;">{{ user_badge.badge.name }}</small>
+                        </div>
+                        {% endfor %}
+
+                        {% for i in "xxx" %}
+                        <div class="text-center opacity-50">
+                            <div class="badge-slot mb-1" data-bs-toggle="tooltip" title="Bloqueado: Continue estudando para desbloquear">
+                                <i class="fas fa-lock text-muted"></i>
+                            </div>
+                            <small class="d-block text-muted-2" style="font-size: 0.7rem;">???</small>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <small class="text-muted-2">
+                            Você desbloqueou <span class="text-white fw-bold">{{ total_badges }}</span> de <span class="text-white">16</span> medalhas.
+                        </small>
+                        <div class="progress mt-1" style="height: 4px; background: rgba(255,255,255,0.05);">
+                            <div class="progress-bar bg-warning" style="width: {% widthratio total_badges 16 100 %}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal: Nova Sessão -->
+<div class="modal fade" id="modalNovaSession" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--hud-bg); border: 1px solid var(--card-border);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white fw-bold"><i class="fas fa-gamepad text-accent me-2"></i>Nova Sessão de Estudo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'core:create_session' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-white">Skill (Matéria)</label>
+                        <select name="skill" class="form-select" required style="background: rgba(0,0,0,0.3); color: white; border-color: var(--card-border);">
+                            <option value="">Selecione...</option>
+                            {% for skill in all_skills %}
+                            <option value="{{ skill.id }}">{{ skill.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Método de Estudo</label>
+                        <select name="method" class="form-select" required style="background: rgba(0,0,0,0.3); color: white; border-color: var(--card-border);">
+                            <option value="VIDEO">📹 Vídeo (1.0x XP)</option>
+                            <option value="READING">📖 Leitura (1.2x XP)</option>
+                            <option value="CODING">💻 Código (1.5x XP)</option>
+                            <option value="PROJECT">🚀 Projeto (2.0x XP)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Tempo (minutos)</label>
+                        <input type="number" name="duration" class="form-control" min="1" required style="background: rgba(0,0,0,0.3); color: white; border-color: var(--card-border);">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Notas (opcional)</label>
+                        <textarea name="notes" class="form-control" rows="3" style="background: rgba(0,0,0,0.3); color: white; border-color: var(--card-border);"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" style="background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none;">
+                        <i class="fas fa-check me-2"></i>Registrar Sessão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inicializar Tooltips do Bootstrap
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    
+    // Animação de Level-Up (se houver parâmetro na URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('levelup') === '1') {
+        // Criar overlay de level-up
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.5s;';
+        overlay.innerHTML = `
+            <div style="text-align: center; animation: scaleIn 0.5s;">
+                <i class="fas fa-level-up-alt" style="font-size: 5rem; color: var(--accent); margin-bottom: 1rem; animation: pulse 1s infinite;"></i>
+                <h1 style="color: white; font-weight: bold; font-size: 3rem; margin-bottom: 0.5rem;">LEVEL UP!</h1>
+                <p style="color: var(--accent); font-size: 1.5rem;">Você alcançou o nível {{ profile.level }}!</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        setTimeout(() => overlay.remove(), 3000);
+    }
+</script>
+
+<style>
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { transform: scale(0.5); } to { transform: scale(1); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+</style>
+
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <a href="{% url 'core:quest_board' %}" class="text-muted-2 mb-3 d-inline-block"><i class="fas fa-arrow-left"></i> Voltar</a>
+    
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card card-slim border-0 shadow-soft mb-4 border-start border-4 border-danger">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="{{ boss.boss_icon }} fa-3x text-danger mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h2 class="fw-bold text-white">{{ boss.title }}</h2>
+                            <div class="d-flex gap-3 mb-3">
+                                <span class="badge bg-danger">Boss Nível Difícil</span>
+                                <span class="text-warning fw-bold"><i class="fas fa-coins"></i> {{ boss.xp_reward }} XP</span>
+                            </div>
+                            <p class="text-white opacity-75 lead">{{ boss.description }}</p>
+                            
+                            <hr class="border-secondary border-opacity-25 my-4">
+                            
+                            <h5 class="text-white fw-bold mb-3"><i class="fab fa-github me-2"></i>Submissão</h5>
+                            
+                            {% if my_submission %}
+                                <div class="alert alert-success bg-opacity-25 bg-success text-white border-success">
+                                    <i class="fas fa-check-circle me-2"></i> Você já derrotou este boss!
+                                    <br><small>Link enviado: <a href="{{ my_submission.repo_link }}" class="text-white text-decoration-underline" target="_blank">{{ my_submission.repo_link }}</a></small>
+                                </div>
+                            {% else %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <label class="text-muted-2 small mb-1">Cole o link do seu repositório Git</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fab fa-github"></i></span>
+                                        <input type="url" name="repo_link" class="form-control bg-dark border-secondary text-white" placeholder="https://github.com/seu-user/projeto" required>
+                                        <button class="btn btn-danger px-4 fw-bold" type="submit">Atacar (Enviar)</button>
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input bg-dark border-secondary" type="checkbox" name="sos_requested" id="sosCheck">
+                                        <label class="form-check-label text-muted-2 small" for="sosCheck">
+                                            Pedir ajuda (SOS) para a Guilda?
+                                        </label>
+                                    </div>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="text-white fw-bold mb-3"><i class="fas fa-users me-2"></i>Hall da Fama (Soluções)</h5>
+            <div class="list-group">
+                {% for sub in submissions %}
+                <div class="list-group-item bg-dark border-secondary border-opacity-25 text-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="https://ui-avatars.com/api/?name={{ sub.user.username }}" class="rounded-circle" width="30">
+                        <div>
+                            <div class="fw-bold">{{ sub.user.username }}</div>
+                            <small class="text-muted-2">{{ sub.created_at|timesince }} atrás</small>
+                        </div>
+                    </div>
+                    <div>
+                        {% if not my_submission %}
+                            <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i> Bloqueado</span>
+                        {% else %}
+                            <a href="{{ sub.repo_link }}" target="_blank" class="btn btn-sm btn-outline-light">Ver Código</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-muted text-center py-3">Seja o primeiro a derrotar este boss!</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card card-slim border-0 shadow-soft mb-3">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-shield-alt text-muted me-2"></i>Requisitos de Batalha
+                </div>
+                <div class="card-body">
+                    {% if boss.recommended_skill %}
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-3 d-flex align-items-center">
+                                {% if user.profile.level >= 1 %}
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                {% endif %}
+                                <div>
+                                    <span class="d-block text-white small">Nível de Herói</span>
+                                    <small class="text-muted-2">Requer Nível 1+</small>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <i class="{{ boss.recommended_skill.icon_class }} me-2 text-warning"></i>
+                                <div>
+                                    <span class="d-block text-white small">Domínio em {{ boss.recommended_skill.name }}</span>
+                                    <small class="text-muted-2">
+                                        Boss requer Nível {{ boss.min_skill_level }}
+                                        <br>
+                                        <span class="text-accent">Dica: Estude mais {{ boss.recommended_skill.name }}!</span>
+                                    </small>
+                                </div>
+                            </li>
+                        </ul>
+                    {% else %}
+                        <p class="text-muted small">Este Boss não exige requisitos especiais. Qualquer um pode tentar!</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-top border-secondary border-opacity-25 text-center">
+                    <small class="text-muted-2 fst-italic">"Apenas os dignos podem passar."</small>
+                </div>
+            </div>
+            
+            <div class="card card-slim border-0 shadow-soft">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">Recompensas</div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2 d-flex align-items-center text-warning">
+                            <i class="fas fa-star me-2"></i> {{ boss.xp_reward }} XP
+                        </li>
+                        <li class="mb-2 d-flex align-items-center text-warning">
+                            <i class="fas fa-coins me-2"></i> Coins variáveis
+                        </li>
+                        <li class="mb-2 d-flex align-items-center text-success">
+                            <i class="fas fa-trophy me-2"></i> Badge especial
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-slim {
+        background-color: rgba(26, 26, 36, 0.8);
+    }
+    .shadow-soft {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .text-muted-2 {
+        color: #8899a6;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="game-card p-4 d-flex justify-content-between align-items-center border-bottom border-primary">
+                <div>
+                    <h2 class="text-uppercase mb-0">Comandante {{ user.username }}</h2>
+                    <span class="badge bg-primary">NÍVEL {{ profile.level }}</span>
+                    <span class="badge bg-secondary">XP: {{ profile.total_xp }}</span>
+                </div>
+                <div class="text-end" style="width: 300px;">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>XP Atual</span>
+                        <span>{{ profile.current_xp }} / {{ next_level_xp }}</span>
+                    </div>
+                    <div class="xp-bar-container">
+                        <div class="xp-bar-fill" style="width: {{ progress_percent }}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="game-card p-3 mb-3 text-center">
+                <i class="fas fa-fire fa-2x text-danger mb-2"></i>
+                <h3>0 Dias</h3>
+                <small class="text-muted">Ofensiva (Streak)</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="game-card p-3 mb-3 text-center">
+                <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                <h3>{{ profile.total_xp }} XP</h3>
+                <small class="text-muted">Total Acumulado</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="game-card p-3 mb-3 text-center">
+                <i class="fas fa-coins fa-2x text-warning mb-2"></i>
+                <h3>{{ profile.dev_coins }}</h3>
+                <small class="text-muted">DevCoins</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="game-card p-3 mb-3 d-flex flex-column justify-content-center align-items-center h-100 btn btn-outline-primary">
+                <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                <strong>REGISTRAR ESTUDO</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <h4 class="mb-3"><i class="fas fa-history"></i> Log de Batalha (Sessões Recentes)</h4>
+            <div class="game-card p-0 overflow-hidden">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Skill</th>
+                            <th>Método</th>
+                            <th>Tempo</th>
+                            <th class="text-end">Loot (XP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in recent_sessions %}
+                        <tr>
+                            <td><i class="{{ session.skill.icon_class }} text-info"></i> {{ session.skill.name }}</td>
+                            <td><span class="badge bg-secondary">{{ session.get_method_display }}</span></td>
+                            <td>{{ session.duration_minutes }} min</td>
+                            <td class="text-end text-success fw-bold">+{{ session.xp_earned }} XP</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">Nenhuma sessão registrada. Comece a estudar!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <h4 class="mb-3"><i class="fas fa-exclamation-circle"></i> Missões Ativas</h4>
+            <div class="game-card p-3 mb-3 border-warning">
+                <h5>Boss: API em Python</h5>
+                <p class="small text-muted">Derrote o dragão do backend criando uma API Rest.</p>
+                <a href="#" class="btn btn-sm btn-warning w-100">Ir para Arena</a>
+            </div>
+            <div class="game-card p-3">
+                <h5>Daily: Code Review</h5>
+                <p class="small text-muted">Ajude um colega a corrigir um bug.</p>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-success" style="width: 0%"></div>
+                </div>
+                <small class="text-muted">0/1 completado</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

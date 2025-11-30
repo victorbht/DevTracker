@@ -1,0 +1,107 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-0"><i class="fas fa-scroll text-warning me-2"></i>Quadro de Missões</h2>
+            <p class="text-muted-2">Escolha seu desafio: Empregos Reais ou Chefes de Código.</p>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#bosses">
+                <i class="fas fa-dragon me-2"></i>Boss Battles (Projetos)
+            </button>
+        </li>
+        <li class="nav-item ms-2">
+            <button class="nav-link rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#quests">
+                <i class="fas fa-briefcase me-2"></i>Job Quests (Vagas)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+        
+        <div class="tab-pane fade show active" id="bosses">
+            <div class="row g-4">
+                {% for boss in bosses %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card card-slim border-0 shadow-soft h-100 position-relative overflow-hidden">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger mb-3">PvE Challenge</span>
+                                <span class="text-warning fw-bold"><i class="fas fa-star"></i> {{ boss.xp_reward }} XP</span>
+                            </div>
+                            <h4 class="text-white fw-bold">{{ boss.title }}</h4>
+                            <p class="text-muted-2 small">{{ boss.description|truncatechars:100 }}</p>
+                            
+                            <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                                <small class="text-muted-2">Desafio épico</small>
+                                <a href="{% url 'core:battle_arena' boss.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-4">
+                                    Entrar na Arena
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-dungeon fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum Boss disponível. Volte mais tarde!</h4>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="quests">
+            <div class="row g-3">
+                {% for quest in quests %}
+                <div class="col-12">
+                    <div class="card card-slim border-0 shadow-soft">
+                        <div class="card-body d-flex align-items-center flex-wrap gap-3">
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning border border-warning">
+                                <i class="fas fa-crown fa-lg"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="text-white fw-bold mb-0">{{ quest.title }}</h5>
+                                <div class="text-muted-2 small">
+                                    <i class="fas fa-building me-1"></i> {{ quest.company }} • 
+                                    <span class="text-success">{{ quest.salary }}</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end d-none d-md-block">
+                                    <div class="badge bg-dark border border-secondary">Nível {{ quest.min_level }}+</div>
+                                    {% if quest.required_skill %}
+                                    <div class="small text-muted-2 mt-1">Requer: {{ quest.required_skill.name }}</div>
+                                    {% endif %}
+                                </div>
+                                <button class="btn btn-warning fw-bold rounded-pill px-4">Aceitar Missão</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <h4 class="text-muted">Nenhuma vaga aberta no momento.</h4>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-slim {
+        background-color: rgba(26, 26, 36, 0.8);
+    }
+    .shadow-soft {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .text-muted-2 {
+        color: #8899a6;
+    }
+</style>
+{% endblock %}
