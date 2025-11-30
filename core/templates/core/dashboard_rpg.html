@@ -111,9 +111,34 @@
         border-radius: 12px;
         font-size: 0.75rem;
     }
+    
+    @media (max-width: 991px) {
+        .avatar-box { width: 60px; height: 60px; }
+        .avatar-box i { font-size: 1.8rem !important; }
+        .hero-card h2 { font-size: 1.5rem !important; }
+        .stat-card h3 { font-size: 1.5rem; }
+        .badge-slot { width: 50px; height: 50px; }
+        .badge-slot i { font-size: 1.2rem !important; }
+    }
+    
+    @media (max-width: 575px) {
+        .hero-card .card-body { flex-direction: column; text-align: center; }
+        .hero-card .avatar-box { margin-bottom: 15px; }
+        .stat-card { padding: 10px !important; }
+        .method-chip { font-size: 0.65rem; padding: 2px 8px; }
+    }
 </style>
 
 <div class="container-fluid">
+
+    <!-- Toggle Dashboard -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{% url 'core:index' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-exchange-alt me-2"></i>Alternar para Dashboard Clássico
+            </a>
+        </div>
+    </div>
 
     <!-- CTA: Nova Sessão -->
     <div class="row mb-3">
@@ -126,7 +151,7 @@
 
     <!-- Hero Card -->
     <div class="row mb-4">
-        <div class="col-lg-8">
+        <div class="col-lg-8 mb-3 mb-lg-0">
             <div class="card hero-card shadow-soft h-100 position-relative overflow-hidden">
                 <div style="position:absolute; top:-50px; right:-50px; width:250px; height:250px; background:rgba(255,255,255,0.03); border-radius:50%; pointer-events:none;"></div>
                 
@@ -167,7 +192,7 @@
 
         <div class="col-lg-4">
             <div class="row g-3 h-100">
-                <div class="col-6">
+                <div class="col-6 col-lg-6">
                     <div class="card card-slim border-0 shadow-soft h-100 stat-card text-center py-3">
                         <div class="card-body">
                             <div class="mb-2"><i class="fas fa-fire fa-2x fire-anim"></i></div>
@@ -182,7 +207,7 @@
                     </div>
                 </div>
 
-                <div class="col-6">
+                <div class="col-6 col-lg-6">
                     <div class="card card-slim border-0 shadow-soft h-100 stat-card text-center py-3 position-relative overflow-hidden">
                         <div class="card-body">
                             <div class="mb-2"><i class="fas fa-coins fa-2x text-warning"></i></div>
@@ -224,7 +249,7 @@
 
     <!-- Skill Tree Preview + Boss Ativo -->
     <div class="row mb-4 g-4">
-        <div class="col-lg-6">
+        <div class="col-lg-6 mb-3 mb-lg-0">
             <div class="card card-slim border-0 shadow-soft h-100">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold text-white"><i class="fas fa-code-branch text-info me-2"></i>Skill Tree (Top 3)</h6>
@@ -236,18 +261,15 @@
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-25">
                             <div class="me-3">
                                 <div class="badge-slot unlocked" style="width: 50px; height: 50px;">
-                                    <i class="{{ skill.skill.icon_class }} text-white"></i>
+                                    <i class="{{ skill.icon_class }} text-white"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="fw-bold text-white">{{ skill.skill.name }}</span>
-                                    <span class="badge bg-info bg-opacity-25 text-info">Nv. {{ skill.level }}</span>
+                                    <span class="fw-bold text-white">{{ skill.name }}</span>
+                                    <span class="badge bg-info bg-opacity-25 text-info">Desbloqueada</span>
                                 </div>
-                                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
-                                    <div class="progress-bar bg-info" style="width: {% widthratio skill.xp 100 100 %}%;"></div>
-                                </div>
-                                <small class="text-muted-2">{{ skill.xp }}/100 XP</small>
+                                <small class="text-muted-2">{{ skill.description|truncatewords:10 }}</small>
                             </div>
                         </div>
                         {% endfor %}
@@ -264,17 +286,25 @@
         <div class="col-lg-6">
             <div class="card card-slim border-0 shadow-soft h-100 position-relative overflow-hidden">
                 {% if next_boss %}
-                    <div style="position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), transparent); pointer-events: none;"></div>
+                    {% if next_boss.boss_image %}
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('/boss_img/{{ next_boss.boss_image }}') center/cover; opacity: 0.15; pointer-events: none;"></div>
+                    {% endif %}
                     <div class="card-header bg-transparent border-0">
                         <h6 class="mb-0 fw-bold text-white"><i class="fas fa-dragon text-danger me-2"></i>Boss Ativo</h6>
                     </div>
                     <div class="card-body position-relative">
                         <div class="d-flex align-items-start mb-3">
+                            {% if next_boss.boss_image %}
+                            <div class="me-3">
+                                <img src="/boss_img/{{ next_boss.boss_image }}" alt="{{ next_boss.title }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #dc3545;">
+                            </div>
+                            {% else %}
                             <div class="me-3">
                                 <div class="badge-slot" style="width: 60px; height: 60px; border-color: #dc3545; background: rgba(220, 53, 69, 0.1);">
                                     <i class="fas fa-skull-crossbones fa-2x text-danger"></i>
                                 </div>
                             </div>
+                            {% endif %}
                             <div class="flex-grow-1">
                                 <h5 class="text-white fw-bold mb-1">{{ next_boss.title }}</h5>
                                 <p class="text-muted-2 small mb-2">{{ next_boss.description|truncatewords:15 }}</p>
@@ -303,14 +333,14 @@
     <!-- Badges e Sessões -->
     <div class="row mb-4 g-4">
         
-        <div class="col-lg-8">
+        <div class="col-lg-8 mb-3 mb-lg-0">
             <div class="card card-slim border-0 shadow-soft h-100">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold text-white"><i class="fas fa-scroll text-secondary me-2"></i>Log de Missões (Últimas Sessões)</h6>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead>
+                        <thead class="d-none d-md-table-header-group">
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <th class="ps-4 text-muted-2 small text-uppercase">Data</th>
                                 <th class="text-muted-2 small text-uppercase">Quest (Matéria)</th>
@@ -321,7 +351,7 @@
                         </thead>
                         <tbody>
                             {% for session in recent_sessions %}
-                            <tr>
+                            <tr class="d-none d-md-table-row">
                                 <td class="ps-4 text-white fw-bold">{{ session.start_time|date:"d/m H:i" }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -336,6 +366,24 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <span class="badge bg-success bg-opacity-25 text-success">Completado</span>
+                                </td>
+                            </tr>
+                            <tr class="d-md-none">
+                                <td class="p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="{{ session.skill.icon_class }} me-2 text-accent"></i>
+                                            <span class="text-white fw-bold">{{ session.skill.name }}</span>
+                                        </div>
+                                        <small class="text-muted-2">{{ session.start_time|date:"d/m H:i" }}</small>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="method-chip">{{ session.get_method_display }}</span>
+                                        <div>
+                                            <span class="text-accent fw-bold small">+{{ session.xp_earned }} XP</span>
+                                            <span class="text-warning small ms-1">(+{{ session.coins_earned }} G)</span>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
@@ -447,8 +495,10 @@
 
 <script>
     // Inicializar Tooltips do Bootstrap
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })
     
     // Animação de Level-Up (se houver parâmetro na URL)
     const urlParams = new URLSearchParams(window.location.search);

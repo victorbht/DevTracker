@@ -1,0 +1,83 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white"><i class="fas fa-trophy text-warning me-2"></i>Sala de Troféus</h2>
+        <p class="text-muted-2">Sua coleção de medalhas de honra.</p>
+    </div>
+
+    <div class="row g-4">
+        {% for boss in all_bosses %}
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card card-slim border-0 shadow-soft h-100 text-center">
+                <div class="card-body p-4">
+                    <div class="mb-3 position-relative" style="height: 120px;">
+                        {% if boss.id in victories %}
+                            {% if boss.medal_image %}
+                            <img src="/boss_img/{{ boss.medal_image }}" class="medal-unlocked" alt="{{ boss.title }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            {% else %}
+                            <i class="{{ boss.boss_icon }} fa-4x text-warning medal-unlocked"></i>
+                            {% endif %}
+                        {% else %}
+                            {% if boss.medal_image %}
+                            <img src="/boss_img/{{ boss.medal_image }}" class="medal-locked" alt="Bloqueado" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            {% else %}
+                            <i class="{{ boss.boss_icon }} fa-4x text-secondary medal-locked"></i>
+                            {% endif %}
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <i class="fas fa-lock fa-2x text-white" style="filter: drop-shadow(0 0 5px #000);"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <h6 class="fw-bold text-white mb-2">{{ boss.title }}</h6>
+                    
+                    {% if boss.id in victories %}
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success rounded-pill px-3">
+                        <i class="fas fa-check me-1"></i> Conquistado
+                    </span>
+                    {% else %}
+                    <span class="badge bg-dark text-muted border border-secondary rounded-pill px-3 mb-2">
+                        Nível {{ boss.min_skill_level }}
+                    </span>
+                    <a href="/gamer/arena/{{ boss.id }}/" class="btn btn-sm btn-outline-warning w-100 rounded-pill">
+                        Desafiar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center text-muted py-5">
+            Nenhum desafio disponível ainda.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .card-slim { background-color: rgba(26, 26, 36, 0.8); }
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .text-muted-2 { color: #8899a6; }
+    
+    .medal-locked {
+        filter: grayscale(100%) brightness(0.4);
+        opacity: 0.6;
+        transition: 0.3s;
+    }
+    .card:hover .medal-locked {
+        filter: grayscale(100%) brightness(0.6);
+        opacity: 1;
+    }
+    
+    .medal-unlocked {
+        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4));
+        animation: float-medal 3s ease-in-out infinite;
+    }
+    @keyframes float-medal {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+</style>
+{% endblock %}

@@ -236,7 +236,11 @@ class BossBattle(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     xp_reward = models.IntegerField(default=500)
+    coin_reward = models.IntegerField(default=100)
     boss_icon = models.CharField(max_length=50, default="fas fa-dragon")
+    boss_image = models.CharField(max_length=200, blank=True, help_text="Nome do arquivo na pasta boss_img/")
+    medal_image = models.CharField(max_length=200, blank=True, help_text="Nome do arquivo da medalha na pasta boss_img/")
+    is_active = models.BooleanField(default=True)
     
     # Skill requerida e nível mínimo
     recommended_skill = models.ForeignKey(SkillNode, on_delete=models.SET_NULL, null=True, blank=True, related_name='bosses')

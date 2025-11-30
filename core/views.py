@@ -515,59 +515,53 @@ def popular_badges(request):
 # === PACOTE GAMER VIEWS ===
 @login_required
 def dashboard_gamer(request):
-    from .models import UserBadge, UserSkill
-    from django.utils import timezone
-    
-    profile = request.user.profile
-    recent_sessions = StudySession.objects.filter(user=request.user).order_by('-start_time')[:5]
-    
-    # Badges
-    recent_badges = UserBadge.objects.filter(user_profile=profile).order_by('-earned_at')[:3]
-    total_badges = profile.badges.count()
-    locked_badges_count = 16 - total_badges
-    
-    # Check-in diário
-    today = timezone.now().date()
-    daily_quest_completed = profile.last_checkin == today
-    
-    # XP Progress
-    next_level_xp = profile.xp_to_next_level()
-    progress_percent = int((profile.current_xp / next_level_xp) * 100) if next_level_xp else 0
-    
-    # Top 3 Skills
-    top_skills = UserSkill.objects.filter(user=request.user).order_by('-level', '-xp')[:3]
-    
-    # Próximo Boss disponível
-    next_boss = BossBattle.objects.filter(is_active=True).order_by('min_skill_level').first()
-    
-    # Skills disponíveis para nova sessão
-    all_skills = SkillNode.objects.all().order_by('name')
-    
-    return render(request, 'core/dashboard_rpg.html', {
-        'profile': profile,
-        'recent_sessions': recent_sessions,
-        'recent_badges': recent_badges,
-        'total_badges': total_badges,
-        'locked_badges_count': locked_badges_count,
-        'daily_quest_completed': daily_quest_completed,
-        'next_level_xp': next_level_xp,
-        'progress_percent': progress_percent,
-        'top_skills': top_skills,
-        'next_boss': next_boss,
-        'all_skills': all_skills,
-    })
+    try:
+        from .models import UserBadge
+        
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        recent_sessions = StudySession.objects.filter(user=request.user).order_by('-start_time')[:5]
+        
+        recent_badges = UserBadge.objects.filter(user_profile=profile).order_by('-earned_at')[:3]
+        total_badges = profile.badges.count()
+        
+        today = timezone.now().date()
+        daily_quest_completed = profile.last_checkin == today
+        
+        next_level_xp = profile.xp_to_next_level()
+        progress_percent = int((profile.current_xp / next_level_xp) * 100) if next_level_xp else 0
+        
+        top_skills = profile.skills_desbloqueadas.all()[:3]
+        next_boss = BossBattle.objects.filter(is_active=True).first()
+        all_skills = SkillNode.objects.all().order_by('name')
+        
+        return render(request, 'core/dashboard_rpg.html', {
+            'profile': profile,
+            'recent_sessions': recent_sessions,
+            'recent_badges': recent_badges,
+            'total_badges': total_badges,
+            'daily_quest_completed': daily_quest_completed,
+            'next_level_xp': next_level_xp,
+            'progress_percent': progress_percent,
+            'top_skills': top_skills,
+            'next_boss': next_boss,
+            'all_skills': all_skills,
+        })
+    except Exception as e:
+        return HttpResponse(f"<h1>Erro no Dashboard</h1><pre>{str(e)}</pre><p>Tipo: {type(e).__name__}</p>")
 
 @login_required
 def quest_board(request):
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
     quests = JobQuest.objects.filter(is_active=True)
-    bosses = BossBattle.objects.all()
-    return render(request, 'core/quests.html', {'quests': quests, 'bosses': bosses})
+    bosses_active = BossBattle.objects.filter(is_active=True)
+    bosses_locked = BossBattle.objects.filter(is_active=False)[:3]
+    return render(request, 'core/quests.html', {'quests': quests, 'bosses': bosses_active, 'locked_bosses': bosses_locked, 'profile': profile})
 
 @login_required
 def battle_arena(request, boss_id):
-    boss = get_object_or_404(BossBattle, pk=boss_id)
+    boss = get_object_or_404(BossBattle, pk=boss_id, is_active=True)
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
     
-    # Processar submissão
     if request.method == 'POST':
         repo_link = request.POST.get('repo_link')
         sos_requested = request.POST.get('sos_requested') == 'on'
@@ -578,7 +572,28 @@ def battle_arena(request, boss_id):
                 repo_link=repo_link,
                 sos_requested=sos_requested
             )
-            return redirect('core:battle_arena', boss_id=boss_id)
+            # Recompensas automáticas
+            profile.adicionar_xp(boss.xp_reward)
+            profile.dev_coins += boss.coin_reward
+            profile.save()
+            
+            # Criar badge especial do boss
+            from .models import Badge, UserBadge
+            badge_slug = f'boss-{boss.id}'
+            badge, created = Badge.objects.get_or_create(
+                slug=badge_slug,
+                defaults={
+                    'name': f'Vencedor: {boss.title}',
+                    'description': f'Derrotou o boss {boss.title}',
+                    'icon_class': boss.boss_icon,
+                    'xp_bonus': 0,
+                    'coin_bonus': 0,
+                    'is_secret': False
+                }
+            )
+            UserBadge.objects.get_or_create(user_profile=profile, badge=badge)
+            
+            return redirect(f'/gamer/arena/{boss_id}/?success=Boss derrotado! +{boss.xp_reward} XP e +{boss.coin_reward} Coins!')
     
     submissions = ProjectSubmission.objects.filter(boss=boss).order_by('-created_at')
     my_submission = ProjectSubmission.objects.filter(boss=boss, user=request.user).first()
@@ -591,8 +606,42 @@ def battle_arena(request, boss_id):
 
 @login_required
 def inventario(request):
-    inventory = request.user.inventory
-    return render(request, 'core/inventory.html', {'inventory': inventory})
+    from .models import UserInventory, StoreItem
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    inventory, _ = UserInventory.objects.get_or_create(user=request.user)
+    items = StoreItem.objects.all().order_by('price')
+    
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        action = request.POST.get('action')
+        
+        if item_id:
+            item = get_object_or_404(StoreItem, pk=item_id)
+            
+            if action == 'buy':
+                if item in inventory.items.all():
+                    return redirect('/gamer/inventario/?error=Você já possui este item!')
+                if profile.dev_coins >= item.price:
+                    profile.dev_coins -= item.price
+                    profile.save()
+                    inventory.items.add(item)
+                    return redirect('/gamer/inventario/?success=Item comprado com sucesso!')
+                else:
+                    return redirect('/gamer/inventario/?error=Saldo insuficiente de DevCoins!')
+            
+            elif action == 'equip':
+                if item not in inventory.items.all():
+                    return redirect('/gamer/inventario/?error=Você não possui este item!')
+                if item.category == 'FRAME':
+                    profile.equipped_frame = item
+                    profile.save()
+                    return redirect('/gamer/inventario/?success=Moldura equipada!')
+                elif item.category == 'BANNER':
+                    profile.equipped_banner = item
+                    profile.save()
+                    return redirect('/gamer/inventario/?success=Banner equipado!')
+    
+    return render(request, 'core/inventory.html', {'inventory': inventory, 'items': items, 'profile': profile})
 
 @login_required
 def create_session(request):
@@ -604,11 +653,132 @@ def create_session(request):
         
         if skill_id and method and duration > 0:
             skill = get_object_or_404(SkillNode, pk=skill_id)
-            StudySession.objects.create(
+            profile = UserProfile.objects.get_or_create(user=request.user)[0]
+            now = timezone.now()
+            
+            multipliers = {'VIDEO': 1.0, 'READING': 1.2, 'CODING': 1.5, 'PROJECT': 2.0}
+            base_xp = duration * 2
+            xp = int(base_xp * multipliers.get(method, 1.0))
+            coins = duration // 10
+            
+            session = StudySession.objects.create(
                 user=request.user,
                 skill=skill,
                 method=method,
-                duration_minutes=duration,
-                notes=notes
+                start_time=now,
+                end_time=now + timedelta(minutes=duration),
+                description=notes,
+                xp_earned=xp,
+                coins_earned=coins
             )
+            
+            profile.adicionar_xp(xp)
+            profile.dev_coins += coins
+            profile.skills_desbloqueadas.add(skill)
+            
+            today = timezone.now().date()
+            if profile.last_checkin != today:
+                if profile.last_checkin == today - timedelta(days=1):
+                    profile.current_streak += 1
+                else:
+                    profile.current_streak = 1
+                profile.last_checkin = today
+                if profile.current_streak > profile.longest_streak:
+                    profile.longest_streak = profile.current_streak
+            
+            profile.save()
+            return redirect(f'/gamer/?success=Sessão registrada! +{xp} XP e +{coins} Coins!')
     return redirect('core:dashboard_gamer')
+
+
+@login_required
+def skill_tree(request):
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    all_skills = SkillNode.objects.filter(parent=None).prefetch_related('children')
+    unlocked = profile.skills_desbloqueadas.all()
+    return render(request, 'core/skill_tree.html', {'skills': all_skills, 'unlocked': unlocked, 'profile': profile})
+
+@login_required
+def conquistas_rpg(request):
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    my_badges = UserBadge.objects.filter(user_profile=profile).select_related('badge')
+    all_bosses = BossBattle.objects.all()
+    defeated_bosses = ProjectSubmission.objects.filter(user=request.user).values_list('boss_id', flat=True)
+    
+    boss_medals = []
+    for boss in all_bosses:
+        boss_medals.append({
+            'boss': boss,
+            'defeated': boss.id in defeated_bosses
+        })
+    
+    return render(request, 'core/conquistas_rpg.html', {
+        'profile': profile,
+        'my_badges': my_badges,
+        'boss_medals': boss_medals
+    })
+
+@login_required
+def trophy_room(request):
+    victories = ProjectSubmission.objects.filter(user=request.user).values_list('boss_id', flat=True)
+    all_bosses = BossBattle.objects.all().order_by('min_skill_level')
+    return render(request, 'core/trophies.html', {'all_bosses': all_bosses, 'victories': victories})
+
+@login_required
+def user_profile(request):
+    from .models import UserBadge, UserInventory, StoreItem
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    inventory, _ = UserInventory.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'edit':
+            bio = request.POST.get('bio', '')
+            github_link = request.POST.get('github_link', '')
+            profile.bio = bio
+            profile.github_link = github_link
+            profile.save()
+            return redirect('/gamer/profile/?success=Perfil atualizado!')
+        
+        elif action == 'equip':
+            item_id = request.POST.get('item_id')
+            if item_id:
+                item = get_object_or_404(StoreItem, pk=item_id)
+                if item in inventory.items.all():
+                    if item.category == 'FRAME':
+                        profile.equipped_frame = item
+                    elif item.category == 'BANNER':
+                        profile.equipped_banner = item
+                    profile.save()
+                    return redirect('/gamer/profile/?success=Item equipado!')
+        
+        elif action == 'unequip':
+            item_type = request.POST.get('item_type')
+            if item_type == 'frame':
+                profile.equipped_frame = None
+            elif item_type == 'banner':
+                profile.equipped_banner = None
+            profile.save()
+            return redirect('/gamer/profile/?success=Item removido!')
+    
+    defeated_bosses = ProjectSubmission.objects.filter(user=request.user).select_related('boss')
+    top_skills = profile.skills_desbloqueadas.all()[:5]
+    recent_badges = UserBadge.objects.filter(user_profile=profile).select_related('badge').order_by('-earned_at')[:6]
+    
+    frames = inventory.items.filter(category='FRAME')
+    banners = inventory.items.filter(category='BANNER')
+    
+    next_level_xp = profile.xp_to_next_level()
+    progress_percent = int((profile.current_xp / next_level_xp) * 100) if next_level_xp else 0
+    
+    return render(request, 'core/profile.html', {
+        'profile': profile,
+        'defeated_bosses': defeated_bosses,
+        'top_skills': top_skills,
+        'recent_badges': recent_badges,
+        'frames': frames,
+        'banners': banners,
+        'next_level_xp': next_level_xp,
+        'progress_percent': progress_percent
+    })

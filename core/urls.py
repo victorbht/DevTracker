@@ -20,9 +20,14 @@ urlpatterns = [
     path('gamer/arena/<int:boss_id>/', views.battle_arena, name='battle_arena'),
     path('gamer/inventario/', views.inventario, name='inventario'),
     path('gamer/session/create/', views.create_session, name='create_session'),
+    path('gamer/skill-tree/', views.skill_tree, name='skill_tree'),
+    path('gamer/conquistas/', views.conquistas_rpg, name='conquistas_rpg'),
+    path('gamer/profile/', views.user_profile, name='user_profile'),
+    path('gamer/trophies/', views.trophy_room, name='trophy_room'),
     
-    # Alias para dashboard
-    path('dashboard/', views.dashboard_gamer, name='dashboard'),
+    # Alias para dashboards
+    path('dashboard/', views.index, name='dashboard_classico'),
+    path('dashboard/rpg/', views.dashboard_gamer, name='dashboard'),
     
     # 2. ROTAS DE GERENCIAMENTO (Configurações)
     path('tech/salvar/', views.salvar_tech, name='salvar_tech'),
@@ -37,6 +42,6 @@ urlpatterns = [
     path('excluir/<int:id>/', views.excluir_sessao, name='excluir'),
 
     # 4. ROTAS GENÉRICAS / DASHBOARD (Prioridade Baixa)
-    path('<str:periodo>/', views.index, name='index'), 
-    path('', views.dashboard_gamer, name='index'),
+    path('<str:periodo>/', views.index, name='index_periodo'), 
+    path('', views.index, name='index'),
 ]

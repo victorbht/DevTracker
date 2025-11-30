@@ -5,7 +5,25 @@
     <a href="{% url 'core:quest_board' %}" class="text-muted-2 mb-3 d-inline-block"><i class="fas fa-arrow-left"></i> Voltar</a>
     
     <div class="row g-4">
-        <div class="col-lg-8">
+        <div class="col-lg-8 mb-3 mb-lg-0">
+            {% if boss.boss_image %}
+            <div class="card card-slim border-0 shadow-soft mb-4 position-relative overflow-hidden" style="min-height: 450px;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('/boss_img/{{ boss.boss_image }}') center/cover; opacity: 0.2; filter: blur(3px);"></div>
+                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to bottom, rgba(15,15,19,0.6), rgba(15,15,19,0.95));"></div>
+                <div class="card-body p-4 position-relative">
+                    <div class="text-center mb-4">
+                        <img src="/boss_img/{{ boss.boss_image }}" alt="{{ boss.title }}" class="arena-boss-img" style="width: 280px; height: 280px; object-fit: contain; filter: drop-shadow(0 10px 30px rgba(220, 53, 69, 0.9));">
+                    </div>
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-white mb-3 arena-title" style="font-size: 2.5rem; text-shadow: 3px 3px 10px rgba(0,0,0,0.9);">{{ boss.title }}</h2>
+                        <div class="d-flex gap-3 mb-3 justify-content-center flex-wrap">
+                            <span class="badge bg-danger bg-opacity-75 border border-danger px-3 py-2">Boss Nível {{ boss.min_skill_level }}</span>
+                            <span class="badge bg-warning bg-opacity-75 border border-warning px-3 py-2" data-bs-toggle="tooltip" title="Recompensa em Experiência"><i class="fas fa-star"></i> {{ boss.xp_reward }} XP</span>
+                            <span class="badge bg-warning bg-opacity-75 border border-warning px-3 py-2" data-bs-toggle="tooltip" title="Recompensa em Ouro"><i class="fas fa-coins"></i> {{ boss.coin_reward }} G</span>
+                        </div>
+                        <div class="text-white lead" style="text-shadow: 2px 2px 6px rgba(0,0,0,0.9); font-size: 1.1rem;" id="bossDesc">{{ boss.description }}</div>
+                    </div>
+            {% else %}
             <div class="card card-slim border-0 shadow-soft mb-4 border-start border-4 border-danger">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-start gap-3">
@@ -16,7 +34,8 @@
                                 <span class="badge bg-danger">Boss Nível Difícil</span>
                                 <span class="text-warning fw-bold"><i class="fas fa-coins"></i> {{ boss.xp_reward }} XP</span>
                             </div>
-                            <p class="text-white opacity-75 lead">{{ boss.description }}</p>
+                            <div class="text-white opacity-75 lead" id="bossDesc">{{ boss.description }}</div>
+            {% endif %}
                             
                             <hr class="border-secondary border-opacity-25 my-4">
                             
@@ -52,20 +71,22 @@
             <h5 class="text-white fw-bold mb-3"><i class="fas fa-users me-2"></i>Hall da Fama (Soluções)</h5>
             <div class="list-group">
                 {% for sub in submissions %}
-                <div class="list-group-item bg-dark border-secondary border-opacity-25 text-white d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name={{ sub.user.username }}" class="rounded-circle" width="30">
-                        <div>
-                            <div class="fw-bold">{{ sub.user.username }}</div>
-                            <small class="text-muted-2">{{ sub.created_at|timesince }} atrás</small>
+                <div class="list-group-item bg-dark border-secondary border-opacity-25 text-white">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="https://ui-avatars.com/api/?name={{ sub.user.username }}" class="rounded-circle" width="30">
+                            <div>
+                                <div class="fw-bold">{{ sub.user.username }}</div>
+                                <small class="text-muted-2">{{ sub.created_at|timesince }} atrás</small>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        {% if not my_submission %}
-                            <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i> Bloqueado</span>
-                        {% else %}
-                            <a href="{{ sub.repo_link }}" target="_blank" class="btn btn-sm btn-outline-light">Ver Código</a>
-                        {% endif %}
+                        <div>
+                            {% if not my_submission %}
+                                <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i> Bloqueado</span>
+                            {% else %}
+                                <a href="{{ sub.repo_link }}" target="_blank" class="btn btn-sm btn-outline-light">Ver Código</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% empty %}
@@ -76,7 +97,10 @@
 
         <div class="col-lg-4">
             <div class="card card-slim border-0 shadow-soft mb-3">
-                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                <div class="card-header bg-transparent border-0 fw-bold text-white text-center">
+                    {% if boss.medal_image %}
+                    <img src="/boss_img/{{ boss.medal_image }}" alt="Medalha" style="width: 120px; height: 120px; object-fit: contain; margin: 10px auto; display: block;">
+                    {% endif %}
                     <i class="fas fa-shield-alt text-muted me-2"></i>Requisitos de Batalha
                 </div>
                 <div class="card-body">
@@ -117,12 +141,20 @@
             <div class="card card-slim border-0 shadow-soft">
                 <div class="card-header bg-transparent border-0 fw-bold text-white">Recompensas</div>
                 <div class="card-body">
+                    {% if boss.medal_image %}
+                    <div class="text-center mb-3">
+                        <div class="badge-3d-container">
+                            <img src="/boss_img/{{ boss.medal_image }}" alt="Medalha" class="rotating-badge" style="width: 100px;">
+                        </div>
+                        <div class="small text-muted-2 mt-2">Medalha Exclusiva</div>
+                    </div>
+                    {% endif %}
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2 d-flex align-items-center text-warning">
                             <i class="fas fa-star me-2"></i> {{ boss.xp_reward }} XP
                         </li>
                         <li class="mb-2 d-flex align-items-center text-warning">
-                            <i class="fas fa-coins me-2"></i> Coins variáveis
+                            <i class="fas fa-coins me-2"></i> {{ boss.coin_reward }} DevCoins
                         </li>
                         <li class="mb-2 d-flex align-items-center text-success">
                             <i class="fas fa-trophy me-2"></i> Badge especial
@@ -144,5 +176,52 @@
     .text-muted-2 {
         color: #8899a6;
     }
+    
+    @media (max-width: 991px) {
+        .arena-boss-img { width: 200px !important; height: 200px !important; }
+        .arena-title { font-size: 1.8rem !important; }
+    }
+    
+    @media (max-width: 575px) {
+        .arena-boss-img { width: 150px !important; height: 150px !important; }
+        .arena-title { font-size: 1.4rem !important; }
+        .badge { font-size: 0.7rem; padding: 4px 8px !important; }
+    }
+    .text-accent { color: #22e3a1; }
+    
+    .badge-3d-container {
+        perspective: 1000px;
+        display: inline-block;
+        filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));
+    }
+    
+    .rotating-badge {
+        animation: spin-3d 8s linear infinite;
+        transform-style: preserve-3d;
+        backface-visibility: visible;
+    }
+    
+    @keyframes spin-3d {
+        from { transform: rotateY(0deg); }
+        to { transform: rotateY(360deg); }
+    }
+    
+    .badge-3d-container:hover .rotating-badge {
+        animation-play-state: paused;
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const descContainer = document.getElementById('bossDesc');
+        if(descContainer) {
+            let html = descContainer.innerHTML;
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-accent">$1</strong>');
+            html = html.replace(/Desafio Técnico:/g, '<br><br><i class="fas fa-laptop-code text-info me-2"></i><strong class="text-info">Desafio Técnico:</strong>');
+            html = html.replace(/Requisito de Vitória:/g, '<br><br><i class="fas fa-trophy text-warning me-2"></i><strong class="text-warning">Requisito de Vitória:</strong>');
+            html = html.replace(/\n/g, '<br>');
+            descContainer.innerHTML = html;
+        }
+    });
+</script>
 {% endblock %}

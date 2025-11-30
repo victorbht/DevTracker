@@ -1,0 +1,292 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card card-slim border-0 shadow-soft position-relative overflow-hidden">
+                {% if profile.equipped_banner %}
+                <div class="profile-banner {{ profile.equipped_banner.css_class }}" style="height: 120px;"></div>
+                {% else %}
+                <div class="profile-banner" style="height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                {% endif %}
+                
+                <div class="card-body text-center pt-0">
+                    <div class="avatar-container {% if profile.equipped_frame %}{{ profile.equipped_frame.css_class }}{% endif %}" style="margin-top: -60px;">
+                        <img src="https://ui-avatars.com/api/?name={{ user.username }}&size=120&background=22e3a1&color=fff" class="rounded-circle" style="width: 120px; height: 120px;">
+                    </div>
+                    
+                    <h3 class="text-white fw-bold mt-3 mb-1">{{ user.username }}</h3>
+                    <p class="text-muted-2 mb-3">Nível {{ profile.level }} • {{ profile.total_xp }} XP Total</p>
+                    
+                    <div class="d-flex justify-content-center gap-3 mb-3">
+                        <div class="text-center">
+                            <div class="text-warning fw-bold fs-4">{{ profile.dev_coins }}</div>
+                            <small class="text-muted-2">DevCoins</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-danger fw-bold fs-4">{{ profile.current_streak }}</div>
+                            <small class="text-muted-2">Streak</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-info fw-bold fs-4">{{ defeated_bosses.count }}</div>
+                            <small class="text-muted-2">Bosses</small>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline-light btn-sm w-100" data-bs-toggle="modal" data-bs-target="#editModal">
+                        <i class="fas fa-edit me-2"></i>Editar Perfil
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card card-slim border-0 shadow-soft mt-3">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-link me-2"></i>Links
+                </div>
+                <div class="card-body">
+                    {% if profile.github_link %}
+                    <a href="{{ profile.github_link }}" target="_blank" class="btn btn-dark w-100 mb-2">
+                        <i class="fab fa-github me-2"></i>GitHub
+                    </a>
+                    {% else %}
+                    <p class="text-muted-2 small">Nenhum link adicionado</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="card card-slim border-0 shadow-soft mb-3">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-user me-2"></i>Sobre
+                </div>
+                <div class="card-body">
+                    {% if profile.bio %}
+                    <p class="text-white">{{ profile.bio }}</p>
+                    {% else %}
+                    <p class="text-muted-2 fst-italic">Nenhuma bio adicionada. Clique em "Editar Perfil" para adicionar.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card card-slim border-0 shadow-soft mb-3">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-code-branch me-2 text-info"></i>Skills Desbloqueadas
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in top_skills %}
+                        <span class="badge bg-dark border border-info text-info px-3 py-2">
+                            <i class="{{ skill.icon_class }} me-1"></i>{{ skill.name }}
+                        </span>
+                        {% empty %}
+                        <p class="text-muted-2">Nenhuma skill desbloqueada ainda.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card card-slim border-0 shadow-soft mb-3">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-trophy me-2 text-warning"></i>Conquistas Recentes
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for user_badge in recent_badges %}
+                        <div class="col-4 col-md-2 text-center">
+                            <div class="badge-icon-profile">
+                                <i class="{{ user_badge.badge.icon_class }} fa-2x"></i>
+                            </div>
+                            <small class="text-muted-2 d-block mt-1" style="font-size: 0.7rem;">{{ user_badge.badge.name|truncatewords:2 }}</small>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted-2">Nenhuma conquista ainda.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card card-slim border-0 shadow-soft">
+                <div class="card-header bg-transparent border-0 fw-bold text-white">
+                    <i class="fas fa-dragon me-2 text-danger"></i>Bosses Derrotados
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for submission in defeated_bosses %}
+                        <div class="col-6 col-md-4">
+                            <div class="boss-card-mini">
+                                {% if submission.boss.medal_image %}
+                                <img src="/boss_img/{{ submission.boss.medal_image }}" alt="{{ submission.boss.title }}" style="width: 60px; height: 60px; object-fit: contain;">
+                                {% else %}
+                                <i class="{{ submission.boss.boss_icon }} fa-2x text-danger"></i>
+                                {% endif %}
+                                <small class="text-white d-block mt-2">{{ submission.boss.title|truncatewords:3 }}</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted-2">Nenhum boss derrotado ainda.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: var(--hud-bg); border: 1px solid #333;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white fw-bold"><i class="fas fa-edit me-2"></i>Editar Perfil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-pills mb-3">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-info">Info</button></li>
+                    <li class="nav-item ms-2"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-cosmetics">Cosméticos</button></li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab-info">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="edit">
+                            <div class="mb-3">
+                                <label class="form-label text-white">Bio</label>
+                                <textarea name="bio" class="form-control bg-dark text-white border-secondary" rows="4" maxlength="500">{{ profile.bio }}</textarea>
+                                <small class="text-muted-2">Máximo 500 caracteres</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-white">Link GitHub</label>
+                                <input type="url" name="github_link" class="form-control bg-dark text-white border-secondary" value="{{ profile.github_link }}" placeholder="https://github.com/seu-usuario">
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-success">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="tab-cosmetics">
+                        <h6 class="text-white mb-3"><i class="fas fa-portrait me-2"></i>Molduras</h6>
+                        <div class="row g-3 mb-4">
+                            {% for frame in frames %}
+                            <div class="col-4">
+                                <div class="cosmetic-item {{ frame.css_class }} {% if profile.equipped_frame == frame %}active{% endif %}">
+                                    <i class="fas fa-portrait fa-2x"></i>
+                                    <small class="d-block mt-2">{{ frame.name|truncatewords:2 }}</small>
+                                    {% if profile.equipped_frame == frame %}
+                                    <form method="post" class="mt-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="unequip">
+                                        <input type="hidden" name="item_type" value="frame">
+                                        <button class="btn btn-sm btn-outline-danger w-100">Remover</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" class="mt-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="equip">
+                                        <input type="hidden" name="item_id" value="{{ frame.id }}">
+                                        <button class="btn btn-sm btn-outline-success w-100">Equipar</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted-2">Nenhuma moldura no inventário. <a href="/gamer/inventario/" class="text-warning">Ir para Loja</a></p>
+                            {% endfor %}
+                        </div>
+                        
+                        <h6 class="text-white mb-3"><i class="fas fa-flag me-2"></i>Banners</h6>
+                        <div class="row g-3">
+                            {% for banner in banners %}
+                            <div class="col-4">
+                                <div class="cosmetic-item {{ banner.css_class }} {% if profile.equipped_banner == banner %}active{% endif %}">
+                                    <i class="fas fa-flag fa-2x"></i>
+                                    <small class="d-block mt-2">{{ banner.name|truncatewords:2 }}</small>
+                                    {% if profile.equipped_banner == banner %}
+                                    <form method="post" class="mt-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="unequip">
+                                        <input type="hidden" name="item_type" value="banner">
+                                        <button class="btn btn-sm btn-outline-danger w-100">Remover</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" class="mt-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="equip">
+                                        <input type="hidden" name="item_id" value="{{ banner.id }}">
+                                        <button class="btn btn-sm btn-outline-success w-100">Equipar</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted-2">Nenhum banner no inventário. <a href="/gamer/inventario/" class="text-warning">Ir para Loja</a></p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-slim { background-color: rgba(26, 26, 36, 0.8); }
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .text-muted-2 { color: #8899a6; }
+    
+    .avatar-container {
+        display: inline-block;
+        padding: 5px;
+        border-radius: 50%;
+        border: 3px solid #22e3a1;
+        background: rgba(0,0,0,0.5);
+    }
+    
+    .badge-icon-profile {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        border-radius: 50%;
+        border: 2px solid #22e3a1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(34, 227, 161, 0.1);
+        color: #22e3a1;
+    }
+    
+    .boss-card-mini {
+        padding: 15px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid #333;
+        text-align: center;
+        transition: 0.3s;
+    }
+    .boss-card-mini:hover {
+        transform: translateY(-5px);
+        border-color: #dc3545;
+    }
+    
+    .cosmetic-item {
+        padding: 15px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.3);
+        border: 2px solid #333;
+        text-align: center;
+        transition: 0.3s;
+        color: #fff;
+    }
+    .cosmetic-item.active {
+        border-color: #22e3a1;
+        box-shadow: 0 0 15px rgba(34, 227, 161, 0.5);
+    }
+    .cosmetic-item:hover {
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}

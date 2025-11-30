@@ -29,9 +29,17 @@
                 {% for boss in bosses %}
                 <div class="col-md-6 col-xl-4">
                     <div class="card card-slim border-0 shadow-soft h-100 position-relative overflow-hidden">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger mb-3">PvE Challenge</span>
+                        {% if boss.boss_image %}
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 200px; background: url('/boss_img/{{ boss.boss_image }}') center/cover; opacity: 0.2;"></div>
+                        {% endif %}
+                        <div class="card-body position-relative">
+                            {% if boss.boss_image %}
+                            <div class="text-center mb-3">
+                                <img src="/boss_img/{{ boss.boss_image }}" alt="{{ boss.title }}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 3px solid #dc3545; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);">
+                            </div>
+                            {% endif %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger">PvE Challenge</span>
                                 <span class="text-warning fw-bold"><i class="fas fa-star"></i> {{ boss.xp_reward }} XP</span>
                             </div>
                             <h4 class="text-white fw-bold">{{ boss.title }}</h4>
@@ -50,6 +58,56 @@
                 <div class="col-12 text-center py-5">
                     <i class="fas fa-dungeon fa-3x text-muted mb-3"></i>
                     <h4 class="text-muted">Nenhum Boss disponível. Volte mais tarde!</h4>
+                </div>
+                {% endfor %}
+                
+                {% for boss in locked_bosses %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card card-slim border-0 shadow-soft h-100 position-relative overflow-hidden" style="filter: grayscale(80%); opacity: 0.7;">
+                        {% if boss.boss_image %}
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 200px; background: url('/boss_img/{{ boss.boss_image }}') center/cover; opacity: 0.1; filter: blur(5px);"></div>
+                        {% endif %}
+                        
+                        <div class="chains-overlay">
+                            <i class="fas fa-link chain-icon" style="position: absolute; top: 20%; left: 10%; font-size: 2rem; color: #666; transform: rotate(-45deg); opacity: 0.6;"></i>
+                            <i class="fas fa-link chain-icon" style="position: absolute; top: 40%; right: 15%; font-size: 2rem; color: #666; transform: rotate(45deg); opacity: 0.6;"></i>
+                            <i class="fas fa-link chain-icon" style="position: absolute; bottom: 30%; left: 20%; font-size: 2rem; color: #666; transform: rotate(-30deg); opacity: 0.6;"></i>
+                        </div>
+                        
+                        <div class="position-absolute top-50 start-50 translate-middle" style="z-index: 10;">
+                            <i class="fas fa-lock fa-4x text-danger" style="filter: drop-shadow(0 0 10px rgba(220, 53, 69, 0.8));"></i>
+                        </div>
+                        
+                        <div class="card-body position-relative text-center" style="filter: blur(2px);">
+                            {% if boss.boss_image %}
+                            <div class="mb-3">
+                                <img src="/boss_img/{{ boss.boss_image }}" alt="Bloqueado" style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 3px solid #555;">
+                            </div>
+                            {% else %}
+                            <div class="mb-3">
+                                <div style="width: 120px; height: 120px; margin: 0 auto; background: rgba(255,255,255,0.05); border-radius: 12px; border: 3px dashed #555; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-dragon fa-3x text-muted"></i>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <h4 class="text-muted fw-bold">{{ boss.title }}</h4>
+                            <p class="text-muted small">{{ boss.description|truncatechars:60 }}</p>
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-top border-danger position-relative" style="z-index: 11; backdrop-filter: blur(0);">
+                            <div class="text-center">
+                                {% if boss.medal_image %}
+                                <img src="/boss_img/{{ boss.medal_image }}" alt="Medalha" style="width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; filter: grayscale(80%);">
+                                {% endif %}
+                                <small class="text-danger fw-bold d-block mb-2"><i class="fas fa-exclamation-triangle me-1"></i>REQUISITOS</small>
+                                {% if boss.recommended_skill %}
+                                <small class="text-white d-block"><i class="{{ boss.recommended_skill.icon_class }} me-1"></i>{{ boss.recommended_skill.name }} Nv.{{ boss.min_skill_level }}+</small>
+                                {% else %}
+                                <small class="text-white d-block"><i class="fas fa-star me-1"></i>Nível {{ profile.level }}+ necessário</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -102,6 +160,25 @@
     }
     .text-muted-2 {
         color: #8899a6;
+    }
+    
+    .chains-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+    }
+    
+    @keyframes chain-swing {
+        0%, 100% { transform: rotate(-45deg) translateY(0); }
+        50% { transform: rotate(-45deg) translateY(-5px); }
+    }
+    
+    .chain-icon {
+        animation: chain-swing 3s ease-in-out infinite;
     }
 </style>
 {% endblock %}

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22e3a1">
+    <link rel="manifest" href="/static/manifest.json">
     <title>DevTracker RPG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,12 +32,14 @@
             width: 250px;
             position: fixed;
             top: 0;
-            left: 0;
+            left: -250px;
             background-color: var(--hud-bg);
             border-right: 1px solid #333;
             padding-top: 20px;
-            z-index: 1000;
+            z-index: 1050;
+            transition: left 0.3s;
         }
+        .sidebar.show { left: 0; }
 
         .sidebar .brand {
             font-size: 1.5rem;
@@ -67,8 +71,60 @@
 
         /* Main Content Area */
         .main-content {
-            margin-left: 250px; /* Largura da sidebar */
-            padding: 30px;
+            margin-left: 0;
+            padding: 20px 15px;
+            padding-top: 70px;
+        }
+        
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--hud-bg);
+            border-bottom: 1px solid #333;
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1049;
+        }
+        .sidebar-overlay.show { display: block; }
+        
+        @media (min-width: 992px) {
+            .sidebar { left: 0; }
+            .main-content { margin-left: 250px; padding: 30px; padding-top: 30px; }
+            .mobile-header { display: none; }
+        }
+        
+        /* Efeitos Globais */
+        .shadow-success { box-shadow: 0 0 15px #28a745; border: 2px solid #28a745; }
+        .shadow-danger { box-shadow: 0 0 15px #dc3545; border: 2px solid #dc3545; }
+        .shadow-warning { box-shadow: 0 0 15px #ffc107; border: 2px solid #ffc107; }
+        .shadow-info { box-shadow: 0 0 15px #17a2b8; border: 2px solid #17a2b8; }
+        
+        @keyframes border-flicker {
+            0% { box-shadow: 0 0 10px #dc3545; }
+            50% { box-shadow: 0 0 20px #ff6b6b; }
+            100% { box-shadow: 0 0 10px #dc3545; }
+        }
+        .fire-anim { animation: border-flicker 2s infinite; }
+        
+        .glitch-effect {
+            border-style: dashed;
+            border-color: #00f3ff;
+            box-shadow: 3px 0px 0px #bc13fe;
         }
 
         /* Cards & Panels */
@@ -96,21 +152,48 @@
 </head>
 <body>
 
-    <div class="sidebar">
+    <div class="mobile-header">
+        <button class="btn btn-link text-white p-0 me-3" id="sidebarToggle">
+            <i class="fas fa-bars fa-lg"></i>
+        </button>
+        <div class="brand" style="font-size: 1.2rem; margin: 0;"><i class="fas fa-gamepad"></i> DevTracker</div>
+    </div>
+    
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
         <div class="brand"><i class="fas fa-gamepad"></i> DevTracker</div>
         
         <nav class="nav flex-column">
-            <a class="nav-link active" href="{% url 'dashboard' %}">
-                <i class="fas fa-chart-pie"></i> Dashboard
+            <a class="nav-link active" href="{% url 'core:dashboard_gamer' %}">
+                <i class="fas fa-chart-pie"></i> Dashboard RPG
             </a>
-            <a class="nav-link" href="{% url 'quest_board' %}">
+            <a class="nav-link" href="{% url 'core:index' %}">
+                <i class="fas fa-table"></i> Dashboard Clássico
+            </a>
+            <a class="nav-link" href="{% url 'core:quest_board' %}">
                 <i class="fas fa-scroll"></i> Quests & Bosses
             </a>
-            <a class="nav-link" href="#">
-                <i class="fas fa-users"></i> Guilda (Social)
+            <a class="nav-link" href="{% url 'core:trophy_room' %}">
+                <i class="fas fa-trophy"></i> Sala de Troféus
             </a>
-            <a class="nav-link" href="{% url 'inventory' %}">
+            <a class="nav-link" href="{% url 'core:conquistas_rpg' %}">
+                <i class="fas fa-medal"></i> Conquistas RPG
+            </a>
+            <a class="nav-link" href="{% url 'core:conquistas' %}">
+                <i class="fas fa-award"></i> Conquistas Clássicas
+            </a>
+            <a class="nav-link" href="{% url 'core:estatisticas' %}">
+                <i class="fas fa-chart-line"></i> Estatísticas
+            </a>
+            <a class="nav-link" href="{% url 'core:inventario' %}">
                 <i class="fas fa-gem"></i> Loja & Inventário
+            </a>
+            <a class="nav-link" href="{% url 'core:skill_tree' %}">
+                <i class="fas fa-sitemap"></i> Skill Tree
+            </a>
+            <a class="nav-link" href="{% url 'core:user_profile' %}">
+                <i class="fas fa-user-circle"></i> Meu Perfil
             </a>
             <hr class="border-secondary mx-3">
             <a class="nav-link text-danger" href="#">
@@ -126,7 +209,7 @@
                 </div>
                 <div>
                     <div class="small fw-bold text-white">{{ user.username }}</div>
-                    <div class="small text-warning"><i class="fas fa-coins"></i> {{ user.profile.dev_coins }} G</div>
+                    <div class="small text-warning"><i class="fas fa-coins"></i> 0 G</div>
                 </div>
             </div>
         </div>
@@ -136,7 +219,51 @@
     <div class="main-content">
         {% block content %}{% endblock %}
     </div>
+    
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="notificationToast" class="toast" role="alert">
+            <div class="toast-header bg-dark text-white border-0">
+                <i class="fas fa-bell me-2 text-warning"></i>
+                <strong class="me-auto">DevTracker</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body bg-dark text-white border-top border-secondary">
+                <span id="toastMessage"></span>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('sidebarToggle');
+        
+        toggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        });
+        
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('notificationToast');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerHTML = message;
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success')) showToast('✅ ' + urlParams.get('success'), 'success');
+        if (urlParams.get('error')) showToast('❌ ' + urlParams.get('error'), 'error');
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>

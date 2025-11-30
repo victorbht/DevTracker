@@ -9,67 +9,260 @@
         </div>
         <div class="col-auto">
             <div class="bg-dark border border-warning rounded-pill px-4 py-2 text-warning fw-bold fs-5">
-                <i class="fas fa-coins me-2"></i> {{ user.profile.dev_coins }} G
+                <i class="fas fa-coins me-2"></i> {{ profile.dev_coins }} G
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        {% for item in store_items %}
-        <div class="col-sm-6 col-md-4 col-xl-3">
-            <div class="card card-slim border-0 shadow-soft h-100 position-relative">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3 d-inline-block position-relative">
-                        <div class="avatar-box {{ item.css_class }}" style="width:80px; height:80px; margin:0 auto;">
-                            <i class="fas fa-user fa-2x"></i>
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#loja">Loja</button></li>
+        <li class="nav-item ms-2"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#inventario">Meu Inventário</button></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="loja">
+            <div class="row g-4">
+                {% for item in items %}
+                <div class="col-sm-6 col-md-4 col-xl-3">
+                    <div class="card card-slim border-0 shadow-soft h-100">
+                        <div class="card-body text-center py-4">
+                            <div class="mb-3">
+                                <div class="item-icon {{ item.css_class }}">
+                                    <i class="fas {% if item.category == 'FRAME' %}fa-portrait{% elif item.category == 'BANNER' %}fa-flag{% else %}fa-palette{% endif %} fa-2x"></i>
+                                </div>
+                            </div>
+                            <h5 class="text-white fw-bold mb-1">{{ item.name }}</h5>
+                            <span class="badge bg-dark border border-secondary">{{ item.get_category_display }}</span>
+                            
+                            <div class="mt-4">
+                                {% if item in inventory.items.all %}
+                                    <button class="btn btn-secondary w-100 disabled"><i class="fas fa-check me-2"></i>Comprado</button>
+                                    <form method="post" class="mt-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="item_id" value="{{ item.id }}">
+                                        <input type="hidden" name="action" value="equip">
+                                        <button class="btn btn-sm btn-outline-success w-100">Equipar</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="item_id" value="{{ item.id }}">
+                                        <input type="hidden" name="action" value="buy">
+                                        <button class="btn btn-outline-warning w-100 fw-bold hover-scale" {% if profile.dev_coins < item.price %}disabled title="Saldo insuficiente"{% endif %}>
+                                            <i class="fas fa-shopping-cart me-2"></i>{{ item.price }} G
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <h5 class="text-white fw-bold mb-1">{{ item.name }}</h5>
-                    <span class="badge bg-dark border border-secondary">{{ item.get_category_display }}</span>
-                    
-                    <div class="mt-4">
-                        {% if item.id in owned_ids %}
-                            <button class="btn btn-secondary w-100 disabled">
-                                <i class="fas fa-check me-2"></i> Comprado
-                            </button>
-                            <button class="btn btn-sm btn-outline-success mt-2 w-100">Equipar</button>
-                        {% else %}
-                            <button class="btn btn-outline-warning w-100 fw-bold">
-                                <i class="fas fa-shopping-cart me-2"></i> {{ item.price }} G
-                            </button>
-                        {% endif %}
-                    </div>
                 </div>
+                {% empty %}
+                <div class="col-12 text-center text-muted py-5">
+                    <i class="fas fa-box-open fa-3x mb-3"></i>
+                    <h4>Loja vazia</h4>
+                </div>
+                {% endfor %}
             </div>
         </div>
-        {% empty %}
-        <div class="col-12 text-center text-muted py-5">
-            <i class="fas fa-box-open fa-3x mb-3"></i>
-            <h4>A loja está sendo reabastecida. Volte logo!</h4>
+        
+        <div class="tab-pane fade" id="inventario">
+            <div class="row g-4">
+                {% for item in inventory.items.all %}
+                <div class="col-sm-6 col-md-4 col-xl-3">
+                    <div class="card card-slim border-0 shadow-soft">
+                        <div class="card-body text-center">
+                            <div class="item-icon {{ item.css_class }} mb-3">
+                                <i class="fas {% if item.category == 'FRAME' %}fa-portrait{% elif item.category == 'BANNER' %}fa-flag{% else %}fa-palette{% endif %} fa-2x"></i>
+                            </div>
+                            <h6 class="text-white">{{ item.name }}</h6>
+                            {% if profile.equipped_frame == item or profile.equipped_banner == item %}
+                            <span class="badge bg-success">Equipado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h4>Inventário vazio</h4>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        {% endfor %}
     </div>
 </div>
 
 <style>
-    .card-slim {
-        background-color: rgba(26, 26, 36, 0.8);
-    }
-    .shadow-soft {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    }
-    .text-muted-2 {
-        color: #8899a6;
-    }
-    .avatar-box {
+    .card-slim { background-color: rgba(26, 26, 36, 0.8); }
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .text-muted-2 { color: #8899a6; }
+    .item-icon {
         width: 80px;
         height: 80px;
+        margin: 0 auto;
         border-radius: 50%;
-        border: 3px solid #22e3a1;
+        border: 3px solid #555;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0,0,0,0.3);
+        background: rgba(255,255,255,0.05);
+        transition: 0.3s;
+    }
+    .item-icon:hover { transform: scale(1.1); }
+    .frame-bronze { border-color: #cd7f32; background: rgba(205, 127, 50, 0.1); }
+    .frame-silver { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.1); }
+    .frame-gold { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+    .banner-neon { border-color: #00f3ff; background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 20px rgba(0, 243, 255, 0.3); }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover:not(:disabled) { transform: scale(1.05); }
+    
+    /* Efeitos da Loja */
+    .shadow-success { box-shadow: 0 0 15px #28a745; border: 2px solid #28a745; }
+    .shadow-danger { box-shadow: 0 0 15px #dc3545; border: 2px solid #dc3545; }
+    .shadow-warning { box-shadow: 0 0 15px #ffc107; border: 2px solid #ffc107; }
+    .shadow-info { box-shadow: 0 0 15px #17a2b8; border: 2px solid #17a2b8; }
+    
+    /* Animação de Fogo */
+    @keyframes border-flicker {
+        0% { box-shadow: 0 0 10px #dc3545; }
+        50% { box-shadow: 0 0 20px #ff6b6b; }
+        100% { box-shadow: 0 0 10px #dc3545; }
+    }
+    .fire-anim { animation: border-flicker 2s infinite; }
+    
+    /* Glitch Effect */
+    .glitch-effect {
+        border-style: dashed;
+        border-color: #00f3ff;
+        box-shadow: 3px 0px 0px #bc13fe;
+    }
+    
+    /* RGB GAMER */
+    @keyframes rainbow {
+        0% { border-color: red; box-shadow: 0 0 10px red; }
+        20% { border-color: orange; box-shadow: 0 0 10px orange; }
+        40% { border-color: yellow; box-shadow: 0 0 10px yellow; }
+        60% { border-color: green; box-shadow: 0 0 10px green; }
+        80% { border-color: blue; box-shadow: 0 0 10px blue; }
+        100% { border-color: violet; box-shadow: 0 0 10px violet; }
+    }
+    .frame-rgb-rainbow {
+        border: 3px solid red;
+        animation: rainbow 3s linear infinite;
+    }
+    
+    /* ERRO DE COMPILAÇÃO */
+    @keyframes shake {
+        0% { transform: translate(1px, 1px) rotate(0deg); }
+        10% { transform: translate(-1px, -2px) rotate(-1deg); }
+        20% { transform: translate(-3px, 0px) rotate(1deg); }
+        30% { transform: translate(3px, 2px) rotate(0deg); }
+        40% { transform: translate(1px, -1px) rotate(1deg); }
+        50% { transform: translate(-1px, 2px) rotate(-1deg); }
+        60% { transform: translate(-3px, 1px) rotate(0deg); }
+        70% { transform: translate(3px, 1px) rotate(-1deg); }
+        80% { transform: translate(-1px, -1px) rotate(1deg); }
+        90% { transform: translate(1px, 2px) rotate(0deg); }
+        100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .frame-error-glitch {
+        border: 3px solid #ff0000;
+        box-shadow: 0 0 5px #ff0000, inset 0 0 10px #ff0000;
+    }
+    .frame-error-glitch:hover {
+        animation: shake 0.5s infinite;
+    }
+    
+    /* MATRIX RAIN */
+    .frame-matrix-rain {
+        border: 2px solid #0f0;
+        box-shadow: 0 0 15px #0f0;
+        background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, #0f0 20px);
+        background-size: 100% 20px;
+        animation: matrixScroll 2s linear infinite;
+    }
+    @keyframes matrixScroll {
+        from { background-position: 0 0; }
+        to { background-position: 0 20px; }
+    }
+    
+    /* PETS */
+    .pet-duck::after { content: " 🐥"; filter: drop-shadow(0 0 5px yellow); }
+    .pet-drone::after { content: " 🛸"; animation: hoverDrone 2s ease-in-out infinite; display: inline-block; }
+    
+    @keyframes hoverDrone {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    
+    /* BOSS FRAMES */
+    .frame-hydra-scales {
+        border: 4px solid #283747;
+        box-shadow: 0 0 10px #00ff00, inset 0 0 10px #00ff00;
+        border-radius: 20% 50% 20% 50%;
+    }
+    
+    .frame-ouroboros-loop {
+        border: 3px dashed cyan;
+        border-radius: 50%;
+        animation: spin-slow 10s linear infinite;
+    }
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+    
+    @keyframes lightning-pulse {
+        0%, 100% { box-shadow: 0 0 5px #00ccff; border-color: #555; }
+        10% { box-shadow: 0 0 25px #ffffff; border-color: #fff; }
+        20% { box-shadow: 0 0 5px #00ccff; border-color: #555; }
+    }
+    .frame-storm-lightning {
+        border: 3px solid #555;
+        animation: lightning-pulse 3s infinite;
+    }
+    
+    .frame-wraith-leak {
+        border: 2px solid #0f0;
+        box-shadow: 0 4px 15px #0f0;
+        border-bottom-width: 6px;
+        border-bottom-color: rgba(0, 255, 0, 0.5);
+        border-radius: 50% 50% 60% 60%;
+    }
+    
+    .frame-gatekeeper-gold {
+        border: 5px double #ffd700;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        background-image: linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000);
+        background-size: 10px 10px;
+    }
+    
+    /* MEDALHAS 3D */
+    .badge-3d-container {
+        perspective: 1000px;
+        display: inline-block;
+        filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));
+    }
+    
+    .rotating-badge {
+        width: 150px;
+        height: auto;
+        animation: spin-3d 8s linear infinite;
+        transform-style: preserve-3d;
+        backface-visibility: visible;
+    }
+    
+    @keyframes spin-3d {
+        from { transform: rotateY(0deg); }
+        to { transform: rotateY(360deg); }
+    }
+    
+    .badge-3d-container:hover .rotating-badge {
+        animation-play-state: paused;
+    }
+</style> 🛸"; animation: hoverDrone 2s ease-in-out infinite; display: inline-block; }
+    
+    @keyframes hoverDrone {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
     }
 </style>
 {% endblock %}

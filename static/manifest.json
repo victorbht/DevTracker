@@ -1,0 +1,16 @@
+{
+  "name": "DevTracker RPG",
+  "short_name": "DevTracker",
+  "description": "Dashboard gamificado de estudos",
+  "start_url": "/gamer/",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#22e3a1",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
