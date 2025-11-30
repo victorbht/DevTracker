@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = ">=5.0,<6"
+django-widget-tweaks = "*"
+markdown = "*"
+gunicorn = "*"
+psycopg2-binary = "*"
+dj-database-url = "*"
+whitenoise = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-django = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.12"

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Galeria de Conquistas | DevTracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22><stop offset=%220%25%22 stop-color=%22%231abc9c%22/><stop offset=%22100%25%22 stop-color=%22%233498db%22/></linearGradient></defs><path d=%22M50 5 L95 27.5 L95 72.5 L50 95 L5 72.5 L5 27.5 Z%22 fill=%22url(%23g)%22/><text x=%2250%22 y=%2265%22 font-family=%22monospace%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22>&gt;_</text></svg>">
+
+    <style>
+        :root {
+            --bg-01: #0b111b;
+            --bg-02: #0f1624;
+            --card: rgba(255,255,255,0.04);
+            --card-border: rgba(255,255,255,0.08);
+            --text: #e6f1ff;
+            --muted: #9fb0c5;
+            --accent: #22e3a1;
+            --accent-2: #4db5ff;
+            --warning: #f1c40f;
+        }
+        body { background: linear-gradient(135deg, #0a0f18 0%, #0f1726 100%); color: var(--text); font-family: 'Space Grotesk', 'Segoe UI', sans-serif; padding-top: 82px; }
+        .navbar-custom { background: rgba(15, 23, 36, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--card-border); }
+        .profile-card { background: linear-gradient(135deg, rgba(34,227,161,0.08), rgba(77,181,255,0.1)), var(--bg-02); border: 1px solid var(--card-border); border-radius: 20px; overflow: hidden; position: relative; }
+        .avatar-box { width: 90px; height: 90px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 20px rgba(34, 227, 161, 0.3); border: 1px solid var(--card-border); color: var(--accent); }
+        .level-badge { position: absolute; bottom: -5px; right: -5px; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .stat-box { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .card-slim { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; }
+        .filter-pill { border-radius: 999px; border: 1px solid var(--card-border); color: var(--muted); background: rgba(255,255,255,0.04); }
+        .filter-pill.active { background: var(--accent); color: #0b111b; border-color: transparent; font-weight: 700; }
+        
+        /* BADGES */
+        .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px; margin-top: 40px; }
+        .trophy-card { background-color: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 25px 15px; text-align: center; height: 100%; transition: transform 0.2s, border-color 0.2s; position: relative; overflow: hidden; }
+        .trophy-card.unlocked:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .badge-wrapper { width: 100px; height: 100px; margin: 0 auto 15px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .shape-hexagono { width: 100%; height: 100%; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; }
+        .shape-padrao { width: 90%; height: 90%; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid rgba(255,255,255,0.2); }
+        .badge-icon { font-size: 2.5rem; color: white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); z-index: 2; }
+        
+        .locked { opacity: 0.6; }
+        .locked .badge-wrapper { filter: grayscale(100%); opacity: 0.3; }
+        .locked .shape-hexagono, .locked .shape-padrao { background-color: transparent !important; border: 2px dashed #555; }
+        .locked .badge-icon { color: #555; }
+        .unlocked .shape-hexagono, .unlocked .shape-padrao { background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%); box-shadow: 0 0 20px rgba(0,0,0,0.3); }
+        
+        .ribbon-container { position: absolute; top: 0; right: 0; width: 80px; height: 80px; overflow: hidden; }
+        .ribbon { position: absolute; top: 15px; right: -30px; width: 120px; background: #FFD700; color: #111; text-align: center; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 5px 0; transform: rotate(45deg); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        h5 { font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; }
+        .desc { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+        .xp-pill { background: #333; color: #aaa; font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-top: 15px; display: inline-block; }
+        .unlocked .xp-pill { background: rgba(255, 215, 0, 0.15); color: #FFD700; border: 1px solid rgba(255, 215, 0, 0.3); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'core:index' %}">
+                <i class="fas fa-arrow-left me-2 text-secondary"></i>
+                <span class="fs-6 fw-bold">Dashboard</span>
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="text-end me-3">
+                    <div class="text-secondary small" style="line-height:1;">XP TOTAL</div>
+                    <div class="fw-bold text-white fs-5" style="line-height:1;">{{ perfil.xp_total }}</div>
+                    <div class="text-secondary small mt-1" style="line-height:1;">Maior streak</div>
+                    <div class="fw-bold text-warning" style="line-height:1;">{{ max_streak }} dias</div>
+                </div>
+                <i class="fas fa-chart-line fa-2x text-secondary opacity-25"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        
+        <div class="profile-card p-4 mb-4 shadow-lg">
+            <div class="row align-items-center">
+                <div class="col-md-7 d-flex align-items-center">
+                    <div class="avatar-box me-4 text-dark">
+                        <i class="fas fa-user-astronaut fa-3x"></i>
+                        <span class="badge bg-warning text-dark level-badge border border-white">Nv. {{ perfil.nivel }}</span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="fw-bold mb-0 text-white">{{ titulo_dev }}</h2>
+                        <div class="d-flex justify-content-between small text-secondary mb-1">
+                            <span>Progresso atual</span>
+                            <span>{{ pct_nivel }}% para o próximo nível</span>
+                        </div>
+                        <div class="progress" style="height: 8px; background: rgba(255,255,255,0.1);">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ pct_nivel }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 mt-4 mt-md-0">
+                    <div class="d-flex gap-3 justify-content-md-end flex-wrap">
+                        <div class="stat-box">
+                            <div class="h3 fw-bold text-white mb-0">{{ streak }}</div>
+                            <div class="small text-secondary text-uppercase fw-bold" style="font-size: 0.7rem;"><i class="fas fa-fire text-danger me-1"></i> Ofensiva</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="h3 fw-bold text-white mb-0">{{ total_liquido }}</div>
+                            <div class="small text-secondary text-uppercase fw-bold" style="font-size: 0.7rem;"><i class="fas fa-clock text-info me-1"></i> Horas</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="h3 fw-bold text-white mb-0">{{ minhas_conquistas_ids|length }}</div>
+                            <div class="small text-secondary text-uppercase fw-bold" style="font-size: 0.7rem;"><i class="fas fa-trophy text-warning me-1"></i> Badges</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card-slim p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2"><span class="badge bg-dark border" style="border-color: var(--card-border);"><i class="fas fa-clock text-warning"></i></span><div><div class="text-muted" style="font-size:0.8rem;">Tempo total</div><strong>Próxima badge</strong></div></div>
+                        {% if progresso_tempo %}<span class="badge bg-light text-dark">{{ progresso_tempo.atual|floatformat:1 }}h / {{ progresso_tempo.meta }}h</span>{% endif %}
+                    </div>
+                    {% if progresso_tempo %}
+                        <div class="progress" style="height:10px; background:rgba(255,255,255,0.08);">
+                            <div class="progress-bar" style="width: {{ progresso_tempo.pct }}%; background: linear-gradient(90deg, var(--accent), var(--accent-2));"></div>
+                        </div>
+                    {% else %}
+                        <small class="text-muted">Sem metas cadastradas para tempo.</small>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card-slim p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2"><span class="badge bg-dark border" style="border-color: var(--card-border);"><i class="fas fa-fire text-danger"></i></span><div><div class="text-muted" style="font-size:0.8rem;">Streak</div><strong>Próxima badge</strong></div></div>
+                        {% if progresso_streak %}<span class="badge bg-light text-dark">{{ progresso_streak.atual }}d / {{ progresso_streak.meta }}d</span>{% endif %}
+                    </div>
+                    {% if progresso_streak %}
+                        <div class="progress" style="height:10px; background:rgba(255,255,255,0.08);">
+                            <div class="progress-bar bg-warning" style="width: {{ progresso_streak.pct }}%;"></div>
+                        </div>
+                    {% else %}
+                        <small class="text-muted">Sem metas cadastradas para streak.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold text-white mb-0">Minha Coleção</h3>
+                <p class="text-secondary mb-0">Explore, filtre e veja o progresso.</p>
+            </div>
+            <div class="btn-group">
+                <button class="btn filter-pill active" data-filter="all">Todas</button>
+                <button class="btn filter-pill" data-filter="unlocked"><i class="fas fa-unlock me-1"></i>Desbloqueadas</button>
+                <button class="btn filter-pill" data-filter="locked"><i class="fas fa-lock me-1"></i>Bloqueadas</button>
+                <button class="btn filter-pill" data-filter="secret"><i class="fas fa-user-ninja me-1"></i>Ocultas desbloqueadas</button>
+            </div>
+        </div>
+
+        <div class="row g-4 justify-content-center" id="gridConquistas">
+            {% for item in todas_conquistas %}
+                {% with conquista=item.obj %}
+                {% ifchanged conquista.get_categoria_display %}
+                    <div class="col-12 mt-4">
+                        <div class="section-title">
+                            {% if conquista.categoria == 'streak' %}<i class="fas fa-fire me-2"></i>{% endif %}
+                            {% if conquista.categoria == 'tecnologia' %}<i class="fas fa-code me-2"></i>{% endif %}
+                            {% if conquista.categoria == 'tempo' %}<i class="fas fa-clock me-2"></i>{% endif %}
+                            {{ conquista.get_categoria_display }}
+                        </div>
+                    </div>
+                {% endifchanged %}
+
+                <div class="col-6 col-md-4 col-lg-3 col-xl-2 conquista-card" data-state="{% if item.unlocked %}unlocked{% else %}locked{% endif %}" data-secret="{{ conquista.oculta|yesno:'true,false' }}">
+                    <div class="trophy-card {% if item.unlocked %}unlocked{% else %}locked{% endif %}">
+                        {% if item.unlocked %}<div class="ribbon-container"><div class="ribbon">TOP</div></div>{% endif %}
+                        <div class="badge-wrapper">
+                            <div class="shape-{{ conquista.tipo_visual }}" style="background-color: {{ conquista.cor_hex }};">
+                                <i class="{{ conquista.icone_fa }} badge-icon"></i>
+                            </div>
+                        </div>
+                        <h5 class="text-white small">{{ conquista.nome }}</h5>
+                        <div class="desc d-none d-md-block">{{ conquista.descricao|truncatechars:40 }}</div>
+                        <div class="xp-pill">+{{ conquista.xp_reward }}</div>
+                        {% if not item.unlocked and item.faltam is not None %}
+                            <div class="small text-muted mt-2">Faltam {{ item.faltam|floatformat:1 }}{% if conquista.categoria == 'streak' %}d{% else %}h{% endif %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const filterButtons = document.querySelectorAll('[data-filter]');
+        const cards = document.querySelectorAll('.conquista-card');
+
+        filterButtons.forEach(btn=>{
+            btn.addEventListener('click',()=>{
+                filterButtons.forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.getAttribute('data-filter');
+                cards.forEach(card=>{
+                    const state = card.getAttribute('data-state');
+                    const secret = card.getAttribute('data-secret') === 'true';
+                    const show = (
+                        filter === 'all' ||
+                        (filter === 'secret' && secret && state === 'unlocked') ||
+                        (filter !== 'secret' && state === filter)
+                    );
+                    card.style.display = show ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

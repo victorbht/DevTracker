@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Estatísticas - DevTracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg-01:#0b111b;--bg-02:#0f1624;--card:rgba(255,255,255,0.04);--card-border:rgba(255,255,255,0.08);--accent:#22e3a1;--text:#f7fbff;--muted:#e0e8f5;}
+        body{background:radial-gradient(circle at 20% 20%,rgba(34,227,161,0.07),transparent 25%),radial-gradient(circle at 80% 0%,rgba(77,181,255,0.12),transparent 25%),linear-gradient(135deg,#0a0f18 0%,#0f1726 100%);color:var(--text);font-family:'Space Grotesk',sans-serif;padding-top:88px;}
+        .navbar-devtracker{background:rgba(12,18,30,0.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--card-border);}
+        .card,.btn,.form-control{border-radius:14px!important;}
+        .shadow-soft{box-shadow:0 15px 40px rgba(0,0,0,0.25)!important;}
+        .card-slim{background:var(--card);border:1px solid var(--card-border);}
+        .action-btn{border:1px solid var(--card-border);background:rgba(255,255,255,0.05);color:var(--text);}
+        .action-btn:hover{border-color:var(--accent);color:var(--accent);}
+        .text-muted-2{color:var(--muted)!important;}
+        .text-accent{color:var(--accent);}
+        .chip{background:rgba(255,255,255,0.07);border:1px solid var(--card-border);border-radius:999px;padding:6px 12px;}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-devtracker fixed-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'core:index' %}">
+                <svg width="42" height="42" viewBox="0 0 100 100" class="me-2" xmlns="http://www.w3.org/2000/svg">
+                    <defs><linearGradient id="bG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1abc9c"/><stop offset="100%" style="stop-color:#3498db"/></linearGradient></defs>
+                    <path d="M50 5 L95 27.5 L95 72.5 L50 95 L5 72.5 L5 27.5 Z" fill="url(#bG)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+                    <text x="50" y="62" font-family="monospace" font-weight="bold" font-size="45" fill="white" text-anchor="middle">&gt;_</text>
+                </svg>
+                <div class="d-flex flex-column" style="line-height:1;">
+                    <span class="text-white fw-bold fs-5">Dev<span style="color:var(--accent);">Tracker</span></span>
+                    <span class="text-muted-2" style="font-size:0.65rem;letter-spacing:1px;">GAMIFIED LEARNING</span>
+                </div>
+            </a>
+            <div class="ms-auto d-flex gap-2">
+                <a class="btn action-btn btn-sm rounded-pill px-3" href="{% url 'core:index' %}"><i class="fas fa-home me-1"></i> Dashboard</a>
+                <a class="btn action-btn btn-sm rounded-pill px-3" href="{% url 'core:conquistas' %}"><i class="fas fa-trophy me-1 text-warning"></i> Conquistas</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-1"><i class="fas fa-chart-line me-2 text-accent"></i>Estatísticas & Métricas</h2>
+            <p class="text-muted-2 mb-0">Análise completa do seu progresso de estudos</p>
+        </div>
+        <a href="{% url 'core:index' %}" class="btn action-btn rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Dashboard</a>
+    </div>
+
+    {% if perfil.meta_semanal or perfil.meta_mensal %}
+    <div class="row mb-4 g-3">
+        {% if perfil.meta_semanal %}
+        <div class="col-md-6">
+            <div class="card card-slim shadow-soft">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div><i class="fas fa-bullseye text-accent me-2"></i><span class="fw-bold">Meta Semanal</span></div>
+                        <span class="text-muted-2">{{ horas_semana|floatformat:1 }}/{{ perfil.meta_semanal }}h</span>
+                    </div>
+                    <div class="progress" style="height:10px;"><div class="progress-bar bg-success" style="width:{{ meta_semanal_pct }}%;"></div></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if perfil.meta_mensal %}
+        <div class="col-md-6">
+            <div class="card card-slim shadow-soft">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div><i class="fas fa-target text-accent me-2"></i><span class="fw-bold">Meta Mensal</span></div>
+                        <span class="text-muted-2">{{ horas_mes|floatformat:1 }}/{{ perfil.meta_mensal }}h</span>
+                    </div>
+                    <div class="progress" style="height:10px;"><div class="progress-bar bg-warning" style="width:{{ meta_mensal_pct }}%;"></div></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card card-slim border-0 shadow-soft mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fas fa-chart-area me-2 text-accent"></i>Evolução Temporal</h5>
+            <canvas id="evolucaoChart" style="max-height:300px;"></canvas>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card card-slim border-0 shadow-soft h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-white mb-3"><i class="fas fa-microchip me-2 text-accent"></i>Distribuição por Tecnologia</h5>
+                    <canvas id="pizzaChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card card-slim border-0 shadow-soft h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-white mb-3"><i class="fas fa-clipboard-list me-2 text-accent"></i>Distribuição por Método</h5>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const mapC = {'Python':'#3776ab','Django':'#092e20','JavaScript':'#f7df1e','HTML/CSS':'#e34c26','SQL':'#4479A1','Git':'#f05032','GitHub':'#181717','PostgreSQL':'#336791','React':'#61dafb','PHP':'#777bb4','Laravel':'#ff2d20','Kotlin':'#7f52ff','MySQL':'#4479A1','Rust':'#dea584','Docker':'#2496ed','Ruby':'#cc342d','Swift':'#fa7343','TypeScript':'#3178c6','C#':'#178600','C++':'#00599c','C':'#3a4049','Lógica de Programação':'#7f8c8d'};
+    
+    Chart.defaults.font.family="'Space Grotesk','Segoe UI',sans-serif";
+    const tD=JSON.parse('{{ tech_json|safe }}'), tL=tD.map(i=>i.nome), tV=tD.map(i=>i.sec/3600);
+    const mD=JSON.parse('{{ metodo_json|safe }}'), mL=mD.map(i=>i.nome), mV=mD.map(i=>i.sec/3600);
+    const eD=JSON.parse('{{ evolucao_json|safe }}'), eL=eD.map(i=>i.semana), eV=eD.map(i=>i.horas);
+    
+    new Chart(document.getElementById('evolucaoChart'),{type:'line',data:{labels:eL,datasets:[{label:'Horas',data:eV,borderColor:'#22e3a1',backgroundColor:'rgba(34,227,161,0.1)',tension:0.4,fill:true,pointRadius:5,pointHoverRadius:7}]},options:{responsive:true,maintainAspectRatio:true,scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#cdd7e3'}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#cdd7e3',callback:v=>v+'h'}}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,22,36,0.9)',titleColor:'#fff',bodyColor:'#cdd7e3',borderColor:'#22e3a1',borderWidth:1}}}});
+    
+    new Chart(document.getElementById('pizzaChart'),{type:'doughnut',data:{labels:tL,datasets:[{data:tV,backgroundColor:tL.map(l=>mapC[l]||'#bdc3c7'),borderWidth:0}]},options:{cutout:'68%',plugins:{legend:{position:'right',labels:{usePointStyle:true,color:'#cdd7e3'}}}}});
+    
+    new Chart(document.getElementById('barChart'),{type:'bar',data:{labels:mL,datasets:[{data:mV,backgroundColor:'#22e3a1',borderRadius:6,maxBarThickness:40}]},options:{scales:{x:{grid:{display:false},ticks:{color:'#cdd7e3'}},y:{ticks:{color:'#cdd7e3'}}},plugins:{legend:{display:false}}}});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
